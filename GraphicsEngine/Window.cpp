@@ -79,7 +79,7 @@ Window::~Window() {
 	UnregisterClassW(L"EngineClassName", m_hInstance);
 }
 
-int Window::ProcessMessages() const noexcept {
+int Window::ProcessMessages() const noexcept(!IS_DEBUG) {
 	static MSG msg;
 	memset(&msg, 0, sizeof(msg));
 

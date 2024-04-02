@@ -9,7 +9,7 @@ StimplyException::StimplyException(int line, const wchar_t* file, std::wstring_v
 	oss << GetType() << "\n" 
 		<< "[LINE]: " << line 
 		<< "\n[FILE]: " << file
-		<< "\n" << Reason();
+		<< "\n" << reason;
 	
 	m_What = oss.str();
 }

@@ -109,7 +109,7 @@
       <AdditionalIncludeDirectories>$(SolutionDir)include;</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
-      <SubSystem>Console</SubSystem>
+      <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
   </ItemDefinitionGroup>
@@ -134,9 +134,10 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="App.h" />
-    <ClInclude Include="D3D12Debug.h" />
     <ClInclude Include="Graphics.h" />
+    <ClInclude Include="GraphicsDebug.h" />
     <ClInclude Include="GraphicsFabric.h" />
+    <ClInclude Include="HrException.h" />
     <ClInclude Include="IBindable.h" />
     <ClInclude Include="Macros.h" />
     <ClInclude Include="resource.h" />
@@ -147,9 +148,10 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="App.cpp" />
-    <ClCompile Include="D3D12Debug.cpp" />
     <ClCompile Include="Graphics.cpp" />
+    <ClCompile Include="GraphicsDebug.cpp" />
     <ClCompile Include="GraphicsFabric.cpp" />
+    <ClCompile Include="HrException.cpp" />
     <ClCompile Include="IBindable.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="StimplyException.cpp" />

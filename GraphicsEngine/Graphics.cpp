@@ -5,6 +5,8 @@
 #include "GraphicsFabric.h"
 #include "Window.h"
 #include "Texture.h"
+#include "GraphicsDebug.h"
+#include "HrException.h"
 
 #pragma comment(lib, "d3d12.lib")
 #pragma comment(lib, "dxgi.lib")
@@ -47,9 +49,7 @@ Graphics::Graphics(UINT width, UINT height)
 Graphics::Graphics(RECT windowRect) 
 	:
 	Graphics(windowRect.right, windowRect.bottom)
-{
-	
-}
+{}
 
 ComPtr<IDXGISwapChain2> Graphics::CreateSwapchain(UINT width, UINT height) const {
 	ComPtr<IDXGISwapChain> swap;

@@ -51,7 +51,6 @@ ComPtr<ID3D12Resource> GraphicsFabric::CreateTexture(void* textureImage) {
     
     ComPtr<ID3D12CommandQueue> queue = GraphicsFabric::CreateCommandQueue(D3D12_COMMAND_LIST_TYPE_COPY);
 
-    GFX_THROW_FAILED(copyCommandList->Close());
 
     ComPtr<ID3D12Fence> fence = GraphicsFabric::CreateFence();
     UINT64 v = 0;

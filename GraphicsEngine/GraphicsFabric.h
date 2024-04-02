@@ -3,6 +3,8 @@
 #include "Graphics.h"
 #include "Macros.h"
 #include "D3DIncls.inl"
+#include "GraphicsDebug.h"
+#include "HrException.h"
 
 #include <unordered_map>
 

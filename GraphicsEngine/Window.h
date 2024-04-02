@@ -11,9 +11,9 @@ public:
 	Window(Window&&) = delete;
 	~Window();
 
-	int ProcessMessages() const noexcept;
-	RECT GetWindowRect() const noexcept;
-	HWND GetHandleToWindow() const noexcept { return m_hWnd; }
+	int ProcessMessages() const noexcept(!IS_DEBUG);
+	RECT GetWindowRect() const noexcept(!IS_DEBUG);
+	HWND GetHandleToWindow() const noexcept(!IS_DEBUG) { return m_hWnd; }
 	static Window& Get() noexcept(!IS_DEBUG);
 
 private:
