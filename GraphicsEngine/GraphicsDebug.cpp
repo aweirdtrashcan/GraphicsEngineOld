@@ -6,6 +6,7 @@
 
 #pragma comment(lib, "dxguid.lib")
 
+#if IS_DEBUG
 GraphicsDebug::GraphicsDebug() {
 	HMODULE debug = GetModuleHandleA("dxgidebug.dll");
 	if (!debug) {
@@ -37,18 +38,18 @@ static std::wstring AnsiToWide(const char* ansi) {
 std::vector<std::wstring> GraphicsDebug::GetErrors() {
 	GraphicsDebug& dbg = GraphicsDebug::Get();
 
-	UINT storedMessages = dbg.m_InfoQueue->GetNumStoredMessages(DXGI_DEBUG_D3D12);
+	UINT64 storedMessages = dbg.m_InfoQueue->GetNumStoredMessages(DXGI_DEBUG_D3D12);
 	if (storedMessages <= 0) {
 		return {};
 	}
-	for (UINT i = 0; i < storedMessages; i++) {
+	for (UINT64 i = 0; i < storedMessages; i++) {
 		SIZE_T messageSize = 0;
-		(dbg.m_InfoQueue->GetMessageW(DXGI_DEBUG_D3D12, i, nullptr, &messageSize));
-		DXGI_INFO_QUEUE_MESSAGE* message = (DXGI_INFO_QUEUE_MESSAGE*)malloc(messageSize * 2);
-		memset(message, 0, messageSize * 2);
-		(dbg.m_InfoQueue->GetMessageW(DXGI_DEBUG_D3D12, i, message, &messageSize));
+		dbg.m_InfoQueue->GetMessageW(DXGI_DEBUG_D3D12, i, nullptr, &messageSize);
+		DXGI_INFO_QUEUE_MESSAGE* message = (DXGI_INFO_QUEUE_MESSAGE*)alloca(messageSize);
+		memset(message, 0, messageSize);
+		dbg.m_InfoQueue->GetMessageW(DXGI_DEBUG_D3D12, i, message, &messageSize);
 		dbg.m_ErrorList.push_back(AnsiToWide(message->pDescription));
-		free(message);
 	}
 	return dbg.m_ErrorList;
 }
+#endif

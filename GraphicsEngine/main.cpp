@@ -3,16 +3,23 @@
 #include "Win.h"
 #include "StimplyException.h"
 
-int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine, int nCmdShow) {
+static inline int run() {
 	try {
 		return App{}.Run();
+	} catch (const StimplyException& exception) {
+		MessageBoxW(NULL, exception.Reason(), exception.GetType(), MB_OK | MB_ICONERROR);
+	} catch (const std::exception& exception) {
+		MessageBoxA(NULL, "Standard Exception", exception.what(), MB_OK | MB_ICONERROR);
 	}
-	catch (const StimplyException& exception) {
-		MessageBox(NULL, exception.GetType(), exception.Reason(), MB_OK);
-	}
-	catch (const std::exception& exception) {
-		MessageBoxA(NULL, "Standard Exception", exception.what(), MB_OK | MB_ICONEXCLAMATION);
-	}
-
 	return -1;
 }
+
+#if IS_DEBUG
+int main() {
+	return run();
+}
+#else
+int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine, int nCmdShow) {
+	return run();
+}
+#endif

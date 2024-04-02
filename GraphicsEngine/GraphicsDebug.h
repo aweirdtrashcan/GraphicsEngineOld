@@ -6,6 +6,7 @@
 
 class GraphicsDebug {
 public:
+#if IS_DEBUG
 	GraphicsDebug(const GraphicsDebug&) = delete;
 	GraphicsDebug(GraphicsDebug&&) = delete;
 
@@ -23,5 +24,6 @@ private:
 
 	std::vector<std::wstring> m_ErrorList;
 	ComPtr<IDXGIInfoQueue> m_InfoQueue;
+#endif
 };
 

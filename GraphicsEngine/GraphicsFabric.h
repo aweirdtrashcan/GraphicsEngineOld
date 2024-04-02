@@ -88,6 +88,18 @@ public:
 	/// Thread-blocking function to create a Texture.
 	/// </summary>
 	static ComPtr<ID3D12Resource> CreateTexture(void* textureImage);
+	static ComPtr<ID3D12Resource> CreateUploadBuffer(ComPtr<ID3D12GraphicsCommandList> resettedCommandList, SIZE_T bufferSize);
+	/// <summary>
+	/// Returns a vertex buffer.
+	/// </summary>
+	static ComPtr<ID3D12Resource> CreateVertexBuffer(ComPtr<ID3D12GraphicsCommandList> resettedCommandList, const void* vertices,
+													 SIZE_T verticesCount, SIZE_T stride, D3D12_VERTEX_BUFFER_VIEW& outView);
+
+	static ComPtr<ID3D12Resource> CreateIndexBuffer(ComPtr<ID3D12GraphicsCommandList> resettedCommandList, const void* indices,
+													SIZE_T indexCount, SIZE_T stride, D3D12_INDEX_BUFFER_VIEW& outView);
+
+	static ComPtr<ID3D12Resource> CreateGenericBuffer(ComPtr<ID3D12GraphicsCommandList> resettedCommandList, const void* data,
+													  SIZE_T bufferSize, SIZE_T stride);
 
 private:
 	std::unordered_map<D3D12_COMMAND_LIST_TYPE, ComPtr<ID3D12CommandQueue>> m_CommandQueue;

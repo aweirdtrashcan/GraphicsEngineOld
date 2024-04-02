@@ -109,7 +109,7 @@
       <AdditionalIncludeDirectories>$(SolutionDir)include;</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
-      <SubSystem>Windows</SubSystem>
+      <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
   </ItemDefinitionGroup>
@@ -139,10 +139,12 @@
     <ClInclude Include="GraphicsFabric.h" />
     <ClInclude Include="HrException.h" />
     <ClInclude Include="IBindable.h" />
+    <ClInclude Include="IndexBuffer.h" />
     <ClInclude Include="Macros.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="StimplyException.h" />
     <ClInclude Include="Texture.h" />
+    <ClInclude Include="VertexBuffer.h" />
     <ClInclude Include="Win.h" />
     <ClInclude Include="Window.h" />
   </ItemGroup>
@@ -153,13 +155,12 @@
     <ClCompile Include="GraphicsFabric.cpp" />
     <ClCompile Include="HrException.cpp" />
     <ClCompile Include="IBindable.cpp" />
+    <ClCompile Include="IndexBuffer.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="StimplyException.cpp" />
     <ClCompile Include="Texture.cpp" />
+    <ClCompile Include="VertexBuffer.cpp" />
     <ClCompile Include="Window.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <ResourceCompile Include="GraphicsEngine.rc" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Bindables.inl" />

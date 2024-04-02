@@ -4,14 +4,10 @@
 #include <sstream>
 
 StimplyException::StimplyException(int line, const wchar_t* file, std::wstring_view reason) {
-	std::wstringstream oss;
-	
-	oss << GetType() << "\n" 
-		<< "[LINE]: " << line 
-		<< "\n[FILE]: " << file
-		<< "\n" << reason;
-	
-	m_What = oss.str();
+	wchar_t buffer[10000];
+
+	swprintf_s(buffer, L"%s\n[FILE]: %s\n[LINE]: %d\n%s", GetType(), file, line, reason.data());
+	m_What = std::wstring(buffer);
 }
 
 const wchar_t* StimplyException::GetType() const noexcept {

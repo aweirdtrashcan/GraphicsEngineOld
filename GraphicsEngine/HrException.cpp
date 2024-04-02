@@ -4,6 +4,7 @@
 
 std::wstring FromVectorToString(const std::vector<std::wstring>& errors) {
 	std::wstringstream oss;
+	oss << "\n\n";
 	for (size_t i = 0; i < errors.size(); i++) {
 		oss << errors[i] << "\n\n";
 	}

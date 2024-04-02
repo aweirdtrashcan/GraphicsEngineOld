@@ -75,7 +75,6 @@ Window::Window(UINT width, UINT height)
 }
 
 Window::~Window() {
-	DestroyWindow(m_hWnd);
 	UnregisterClassW(L"EngineClassName", m_hInstance);
 }
 
@@ -95,7 +94,7 @@ int Window::ProcessMessages() const noexcept(!IS_DEBUG) {
 	return 0xF0D45E;
 }
 
-RECT Window::GetWindowRect() const noexcept {
+RECT Window::GetWindowRect() const noexcept(!IS_DEBUG) {
 	RECT rect;
 	rect.left = m_WindowRect.left + m_WindowRectOffset.left;
 	rect.right = m_WindowRect.right + m_WindowRectOffset.right;
