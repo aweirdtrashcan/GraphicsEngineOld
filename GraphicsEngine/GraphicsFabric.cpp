@@ -3,7 +3,6 @@
 #include "Texture.h"
 
 ComPtr<ID3D12Resource> GraphicsFabric::CreateTexture(void* textureImage) {
-    Graphics& gfx = *Graphics::GetGraphics();
     Texture::TextureImage& image = *reinterpret_cast<Texture::TextureImage*>(textureImage);
 
     ComPtr<ID3D12Resource> textureBuffer;
@@ -12,7 +11,7 @@ ComPtr<ID3D12Resource> GraphicsFabric::CreateTexture(void* textureImage) {
     ComPtr<ID3D12GraphicsCommandList> copyCommandList = GraphicsFabric::CreateCommandList(D3D12_COMMAND_LIST_TYPE_COPY, copyCommandAllocator);
     GFX_THROW_FAILED(copyCommandList->Reset(copyCommandAllocator.Get(), nullptr));
 
-    GFX_THROW_FAILED(gfx.m_Device->CreateCommittedResource(
+    GFX_THROW_FAILED(gfx().m_Device->CreateCommittedResource(
         &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
         D3D12_HEAP_FLAG_NONE,
         &CD3DX12_RESOURCE_DESC::Buffer(image.GetTextureSize()),
@@ -60,9 +59,8 @@ ComPtr<ID3D12Resource> GraphicsFabric::CreateTexture(void* textureImage) {
 ComPtr<ID3D12Resource> GraphicsFabric::CreateUploadBuffer(ComPtr<ID3D12GraphicsCommandList> resettedCommandList, 
                                                           SIZE_T bufferSize) {
     ComPtr<ID3D12Resource> uploadBuffer;
-    Graphics& gfx = *Graphics::GetGraphics();
 
-    GFX_THROW_FAILED(gfx.m_Device->CreateCommittedResource(
+    GFX_THROW_FAILED(gfx().m_Device->CreateCommittedResource(
         &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
         D3D12_HEAP_FLAG_NONE,
         &CD3DX12_RESOURCE_DESC::Buffer(bufferSize),
@@ -74,41 +72,46 @@ ComPtr<ID3D12Resource> GraphicsFabric::CreateUploadBuffer(ComPtr<ID3D12GraphicsC
     return uploadBuffer;
 }
 
-ComPtr<ID3D12Resource> GraphicsFabric::CreateVertexBuffer(ComPtr<ID3D12GraphicsCommandList> resettedCommandList, const void* vertices, 
+ComPtr<ID3D12Resource> GraphicsFabric::CreateVertexBuffer(const void* vertices, 
                                                           SIZE_T verticesCount, SIZE_T stride, D3D12_VERTEX_BUFFER_VIEW& outView) {
-    ComPtr<ID3D12Resource> buffer = GraphicsFabric::CreateGenericBuffer(resettedCommandList, vertices, verticesCount, stride);
+    ComPtr<ID3D12Resource> buffer = GraphicsFabric::CreateGenericBuffer(vertices, verticesCount, stride);
 
     outView.BufferLocation = buffer->GetGPUVirtualAddress();
-    outView.SizeInBytes = verticesCount * stride;
-    outView.StrideInBytes = stride;
+    outView.SizeInBytes = static_cast<UINT>(verticesCount * stride);
+    outView.StrideInBytes = static_cast<UINT>(stride);
 
     return buffer;
 }
 
-ComPtr<ID3D12Resource> GraphicsFabric::CreateIndexBuffer(ComPtr<ID3D12GraphicsCommandList> resettedCommandList, const void* indices, 
+ComPtr<ID3D12Resource> GraphicsFabric::CreateIndexBuffer(const void* indices, 
                                                          SIZE_T indexCount, SIZE_T stride, D3D12_INDEX_BUFFER_VIEW& outView) {
-    if (stride > 8 || stride < 4) {
-        STIMPLY_EXCEPTION(L"Can't have index buffer whose stride is bigger than 8 bytes (32 bits)!");
+    if (stride > 4 || stride < 2) {
+        STIMPLY_EXCEPTION(L"Can't have index buffer whose stride is bigger than 4 bytes (32 bits)!");
     }
-    ComPtr<ID3D12Resource> buffer = GraphicsFabric::CreateGenericBuffer(resettedCommandList, indices, indexCount, stride);
+    ComPtr<ID3D12Resource> buffer = GraphicsFabric::CreateGenericBuffer(indices, indexCount, stride, true);
 
     outView.BufferLocation = buffer->GetGPUVirtualAddress();
-    outView.SizeInBytes = indexCount * stride;
-    outView.Format = stride == 8 ? DXGI_FORMAT_R32_UINT : DXGI_FORMAT_R16_UINT;
+    outView.SizeInBytes = static_cast<UINT>(indexCount * stride);
+    outView.Format = stride == 4 ? DXGI_FORMAT_R32_UINT : DXGI_FORMAT_R16_UINT;
 
     return buffer;
 }
 
-ComPtr<ID3D12Resource> GraphicsFabric::CreateGenericBuffer(ComPtr<ID3D12GraphicsCommandList> resettedCommandList, const void* data, SIZE_T bufferSize, SIZE_T stride) {
-    Graphics& gfx = *Graphics::GetGraphics();
-    ComPtr<ID3D12Resource> uploadBuffer = GraphicsFabric::CreateUploadBuffer(resettedCommandList, bufferSize);
-
+ComPtr<ID3D12Resource> GraphicsFabric::CreateGenericBuffer(const void* data, SIZE_T bufferSize, SIZE_T stride, bool bIndex) {
     ComPtr<ID3D12Resource> buffer;
 
-    GFX_THROW_FAILED(gfx.m_Device->CreateCommittedResource(
+    bufferSize = bufferSize * stride;
+
+    GraphicsFabric& f = GraphicsFabric::Get();
+    GFX_THROW_FAILED(f.m_CommandAllocator->Reset());
+    GFX_THROW_FAILED(f.m_CommandList->Reset(f.m_CommandAllocator.Get(), nullptr));
+
+    ComPtr<ID3D12Resource> uploadBuffer = GraphicsFabric::CreateUploadBuffer(f.m_CommandList, bufferSize);
+
+    GFX_THROW_FAILED(gfx().m_Device->CreateCommittedResource(
         &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
-        D3D12_HEAP_FLAG_ALLOW_ONLY_BUFFERS,
-        &CD3DX12_RESOURCE_DESC::Buffer(bufferSize * stride),
+        D3D12_HEAP_FLAG_NONE,
+        &CD3DX12_RESOURCE_DESC::Buffer(bufferSize),
         D3D12_RESOURCE_STATE_COMMON,
         nullptr,
         IID_PPV_ARGS(&buffer)
@@ -119,15 +122,22 @@ ComPtr<ID3D12Resource> GraphicsFabric::CreateGenericBuffer(ComPtr<ID3D12Graphics
     memcpy(mappedUpload, data, bufferSize);
     uploadBuffer->Unmap(0, nullptr);
 
-    resettedCommandList->CopyResource(buffer.Get(), uploadBuffer.Get());
+    f.m_CommandList->CopyResource(buffer.Get(), uploadBuffer.Get());
 
-    ComPtr<ID3D12CommandQueue> queue = GraphicsFabric::CreateCommandQueue(D3D12_COMMAND_LIST_TYPE_COPY);
+    ComPtr<ID3D12CommandQueue> queue = GraphicsFabric::CreateCommandQueue(D3D12_COMMAND_LIST_TYPE_DIRECT);
 
-    GFX_THROW_FAILED(resettedCommandList->Close());
+    if (bIndex) {
+        f.m_CommandList->ResourceBarrier(
+            1,
+            &CD3DX12_RESOURCE_BARRIER::Transition(buffer.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_INDEX_BUFFER)
+        );
+    }
+
+    GFX_THROW_FAILED(f.m_CommandList->Close());
 
     ComPtr<ID3D12Fence> fence = GraphicsFabric::CreateFence();
     UINT64 v = 0;
-    queue->ExecuteCommandLists(1, (ID3D12CommandList* const*)resettedCommandList.GetAddressOf());
+    queue->ExecuteCommandLists(1, (ID3D12CommandList* const*)f.m_CommandList.GetAddressOf());
     SignalFence(queue, fence, v);
     WaitForFence(fence, v);
 

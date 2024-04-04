@@ -4378,6 +4378,8 @@ HRESULT WINAPI D3D12CreateVersionedRootSignatureDeserializer(
 typedef struct D3D12_CPU_DESCRIPTOR_HANDLE
     {
     SIZE_T ptr;
+    // modification i did myself to update the pointer.
+    D3D12_CPU_DESCRIPTOR_HANDLE At(UINT index, UINT incrementSize) const { return { this->ptr + (index * incrementSize) }; }
     } 	D3D12_CPU_DESCRIPTOR_HANDLE;
 
 typedef struct D3D12_GPU_DESCRIPTOR_HANDLE
@@ -6251,6 +6253,8 @@ EXTERN_C const IID IID_ID3D12GraphicsCommandList;
     public:
         virtual HRESULT STDMETHODCALLTYPE Close( void) = 0;
         
+        ID3D12CommandList* AsList() const { return (ID3D12CommandList*)this; }
+
         virtual HRESULT STDMETHODCALLTYPE Reset( 
             _In_  ID3D12CommandAllocator *pAllocator,
             _In_opt_  ID3D12PipelineState *pInitialState) = 0;

@@ -8,15 +8,13 @@
 #include "Macros.h"
 #include "GraphicsFabric.h"
 
-Texture::Texture(ComPtr<ID3D12GraphicsCommandList> commandList, ComPtr<ID3D12CommandAllocator> commandAllocator, std::string_view texturePath) 
-	:
-	IBindable(commandList, commandAllocator) {
+Texture::Texture(std::string_view texturePath) {
 	TextureImage image(texturePath);
 
 	GraphicsFabric::CreateTexture(&image);
 }
 
-void Texture::Bind() noexcept {
+void Texture::Bind(ID3D12GraphicsCommandList* cmdList) noexcept {
 	
 }
 

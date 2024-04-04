@@ -7,6 +7,7 @@
 #include "HrException.h"
 
 #include <unordered_map>
+#include <sstream>
 
 class GraphicsFabric {
 public:
@@ -16,14 +17,9 @@ public:
 	}
 
 	static ComPtr<ID3D12CommandAllocator> CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE type) {
-		Graphics* gfx = Graphics::GetGraphics();
-		if (!gfx) {
-			return nullptr;
-		}
-
 		ComPtr<ID3D12CommandAllocator> allocator;
 
-		GFX_THROW_FAILED(gfx->m_Device->CreateCommandAllocator(
+		GFX_THROW_FAILED(gfx().m_Device->CreateCommandAllocator(
 			type,
 			IID_PPV_ARGS(&allocator)
 		));
@@ -32,12 +28,10 @@ public:
 	}
 
 	static ComPtr<ID3D12GraphicsCommandList> CreateCommandList(D3D12_COMMAND_LIST_TYPE type, ComPtr<ID3D12CommandAllocator> allocator) {
-		Graphics* gfx = Graphics::GetGraphics();
-	
 		ComPtr<ID3D12GraphicsCommandList> cmdList;
 
 		GFX_THROW_FAILED(
-			gfx->m_Device->CreateCommandList(
+			gfx().m_Device->CreateCommandList(
 			0, type, allocator.Get(),
 			nullptr,
 			IID_PPV_ARGS(&cmdList))
@@ -49,25 +43,22 @@ public:
 	}
 
 	static ComPtr<ID3D12CommandQueue> CreateCommandQueue(D3D12_COMMAND_LIST_TYPE type) {
-		Graphics* gfx = Graphics::GetGraphics();
 		GraphicsFabric& fabric = GraphicsFabric::Get();
 
 		if (fabric.m_CommandQueue[type] == nullptr) {
 			D3D12_COMMAND_QUEUE_DESC desc = {};
 			desc.Type = type;
 
-			GFX_THROW_FAILED(gfx->m_Device->CreateCommandQueue(&desc, IID_PPV_ARGS(&fabric.m_CommandQueue[type])));
+			GFX_THROW_FAILED(gfx().m_Device->CreateCommandQueue(&desc, IID_PPV_ARGS(&fabric.m_CommandQueue[type])));
 		}
 
 		return fabric.m_CommandQueue[type];
 	}
 
 	static ComPtr<ID3D12Fence> CreateFence(UINT64 initialValue = 0) {
-		Graphics* gfx = Graphics::GetGraphics();
-
 		ComPtr<ID3D12Fence> fence;
 
-		GFX_THROW_FAILED(gfx->m_Device->CreateFence(initialValue, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&fence)));
+		GFX_THROW_FAILED(gfx().m_Device->CreateFence(initialValue, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&fence)));
 		return fence;
 	}
 
@@ -78,6 +69,13 @@ public:
 			WaitForSingleObject(event, DWORD_MAX);
 		}
 		CloseHandle(event);
+	}
+
+	static void WaitForFence(ComPtr<ID3D12Fence> fence, UINT64 value, HANDLE event) {
+		if (fence->GetCompletedValue() < value) {
+			GFX_THROW_FAILED(fence->SetEventOnCompletion(value, event));
+			WaitForSingleObject(event, DWORD_MAX);
+		}
 	}
 
 	static void SignalFence(ComPtr<ID3D12CommandQueue> queue, ComPtr<ID3D12Fence> fence, UINT64& value) {
@@ -92,15 +90,61 @@ public:
 	/// <summary>
 	/// Returns a vertex buffer.
 	/// </summary>
-	static ComPtr<ID3D12Resource> CreateVertexBuffer(ComPtr<ID3D12GraphicsCommandList> resettedCommandList, const void* vertices,
+	static ComPtr<ID3D12Resource> CreateVertexBuffer(const void* vertices,
 													 SIZE_T verticesCount, SIZE_T stride, D3D12_VERTEX_BUFFER_VIEW& outView);
 
-	static ComPtr<ID3D12Resource> CreateIndexBuffer(ComPtr<ID3D12GraphicsCommandList> resettedCommandList, const void* indices,
+	static ComPtr<ID3D12Resource> CreateIndexBuffer(const void* indices,
 													SIZE_T indexCount, SIZE_T stride, D3D12_INDEX_BUFFER_VIEW& outView);
 
-	static ComPtr<ID3D12Resource> CreateGenericBuffer(ComPtr<ID3D12GraphicsCommandList> resettedCommandList, const void* data,
-													  SIZE_T bufferSize, SIZE_T stride);
+	static ComPtr<ID3D12Resource> CreateGenericBuffer(const void* data,
+													  SIZE_T bufferSize, SIZE_T stride, bool bIndex = false);
+	
+	static ComPtr<ID3D12PipelineState> CreatePipelineState(const D3D12_GRAPHICS_PIPELINE_STATE_DESC& desc) {
+		ComPtr<ID3D12PipelineState> state;
+
+		GFX_THROW_FAILED(gfx().m_Device->CreateGraphicsPipelineState(&desc, IID_PPV_ARGS(&state)));
+		return state;
+	}
+
+	static ComPtr<ID3D12RootSignature> CreateRootSignature(const D3D12_ROOT_SIGNATURE_DESC& desc) {
+		ComPtr<ID3DBlob> errorBlob;
+		ComPtr<ID3DBlob> successBlob;
+
+		if (FAILED(D3D12SerializeRootSignature(&desc, D3D_ROOT_SIGNATURE_VERSION_1_0, &successBlob, &errorBlob))) {
+			const char* errorMessage = static_cast<const char*>(errorBlob->GetBufferPointer());
+
+			std::wstringstream oss;
+
+			oss << errorMessage;
+
+			GRAPHICS_EXCEPTION(oss.str());
+		}
+
+		ComPtr<ID3D12RootSignature> rootSignature;
+
+		GFX_THROW_FAILED(
+			gfx().m_Device->CreateRootSignature(
+				0, 
+				successBlob->GetBufferPointer(), 
+				successBlob->GetBufferSize(), 
+				IID_PPV_ARGS(&rootSignature)
+		));
+
+		return rootSignature;
+	}
+
+private:
+	__forceinline static Graphics& gfx() {
+		return *Graphics::GetGraphics();
+	}
+
+	GraphicsFabric() {
+		m_CommandAllocator = CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT);
+		m_CommandList = CreateCommandList(D3D12_COMMAND_LIST_TYPE_DIRECT, m_CommandAllocator.Get());
+	}
 
 private:
 	std::unordered_map<D3D12_COMMAND_LIST_TYPE, ComPtr<ID3D12CommandQueue>> m_CommandQueue;
+	ComPtr<ID3D12GraphicsCommandList> m_CommandList;
+	ComPtr<ID3D12CommandAllocator> m_CommandAllocator;
 };

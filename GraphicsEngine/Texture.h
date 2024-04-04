@@ -36,8 +36,8 @@ public:
 		bool converted;
 	};
 public:
-	Texture(ComPtr<ID3D12GraphicsCommandList> commandList, ComPtr<ID3D12CommandAllocator> commandAllocator, std::string_view texturePath);
-	virtual void Bind() noexcept override;
+	Texture(std::string_view texturePath);
+	virtual void Bind(ID3D12GraphicsCommandList* cmdList) noexcept override;
 
 };
 
