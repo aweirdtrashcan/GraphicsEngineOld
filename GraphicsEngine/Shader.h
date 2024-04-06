@@ -1,6 +1,8 @@
 #pragma once
 
 #include "D3DIncls.inl"
+#include "StimplyException.h"
+#include <sstream>
 
 class Shader {
 public:
@@ -8,7 +10,19 @@ public:
 		VertexShader,
 		PixelShader
 	};
+public:
+	class ShaderException : public StimplyException {
+	public:
+		ShaderException(int line, const wchar_t* file, std::wstring_view shaderPath) :
+			StimplyException(line, file, BuildShaderErrorMessage(shaderPath)) {}
 
+		static std::wstring BuildShaderErrorMessage(std::wstring_view shaderPath) {
+			std::wstringstream ss;
+
+			ss << L"Failed to load shader:" << shaderPath;
+			return ss.str();
+		}
+	};
 public:
 	Shader(const wchar_t* shaderPath, Type type);
 	

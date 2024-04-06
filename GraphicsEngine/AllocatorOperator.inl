@@ -11,7 +11,7 @@
 #endif
 
 static __forceinline FreeListAllocator& Get() {
-	static FreeListAllocator m_Instance(1024 * 1024, FreeListAllocator::FIND_FIRST);
+	static FreeListAllocator m_Instance = FreeListAllocator(1024 * 1024, FreeListAllocator::FIND_FIRST);
 	return m_Instance;
 }
 

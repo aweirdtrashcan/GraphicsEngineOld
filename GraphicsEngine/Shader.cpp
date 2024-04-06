@@ -6,9 +6,10 @@
 #include "Macros.h"
 #include "GraphicsDebug.h"
 #include "HrException.h"
+#include <cassert>
 
 Shader::Shader(const wchar_t* shaderPath, Type type)
 	: m_Type(type) {
 
-	GFX_THROW_FAILED(D3DReadFileToBlob(shaderPath, &m_Blob));
+	HR_THROW_FAILED(D3DReadFileToBlob(shaderPath, &m_Blob));
 }

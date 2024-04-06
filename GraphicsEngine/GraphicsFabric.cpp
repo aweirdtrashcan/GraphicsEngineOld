@@ -1,6 +1,7 @@
 #include "GraphicsFabric.h"
 
 #include "Texture.h"
+#include "GraphicsException.h"
 
 ComPtr<ID3D12Resource> GraphicsFabric::CreateTexture(void* textureImage) {
     Texture::TextureImage& image = *reinterpret_cast<Texture::TextureImage*>(textureImage);
@@ -9,10 +10,10 @@ ComPtr<ID3D12Resource> GraphicsFabric::CreateTexture(void* textureImage) {
 
     ComPtr<ID3D12CommandAllocator> copyCommandAllocator = GraphicsFabric::CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT);
     ComPtr<ID3D12GraphicsCommandList> copyCommandList = GraphicsFabric::CreateCommandList(D3D12_COMMAND_LIST_TYPE_DIRECT, copyCommandAllocator);
-    GFX_THROW_FAILED(copyCommandAllocator->Reset());
-    GFX_THROW_FAILED(copyCommandList->Reset(copyCommandAllocator.Get(), nullptr));
+    HR_THROW_FAILED(copyCommandAllocator->Reset());
+    HR_THROW_FAILED(copyCommandList->Reset(copyCommandAllocator.Get(), nullptr));
 
-    GFX_THROW_FAILED(gfx().m_Device->CreateCommittedResource(
+    HR_THROW_FAILED(gfx().m_Device->CreateCommittedResource(
         &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
         D3D12_HEAP_FLAG_NONE,
         &CD3DX12_RESOURCE_DESC::Buffer(image.GetTextureSize()),
@@ -21,14 +22,14 @@ ComPtr<ID3D12Resource> GraphicsFabric::CreateTexture(void* textureImage) {
         IID_PPV_ARGS(&textureBuffer)
     ));
 
-    copyCommandList->ResourceBarrier(
+    GFX_THROW_FAILED(copyCommandList->ResourceBarrier(
         1,
         &CD3DX12_RESOURCE_BARRIER::Transition(
             textureBuffer.Get(),
             D3D12_RESOURCE_STATE_COMMON,
             D3D12_RESOURCE_STATE_COPY_DEST
         )
-    );
+    ));
 
     ComPtr<ID3D12Resource> uploadBuffer = GraphicsFabric::CreateUploadBuffer(
         copyCommandList,
@@ -36,15 +37,15 @@ ComPtr<ID3D12Resource> GraphicsFabric::CreateTexture(void* textureImage) {
     );
 
     void* uploadData;
-    GFX_THROW_FAILED(uploadBuffer->Map(0, nullptr, &uploadData));
+    HR_THROW_FAILED(uploadBuffer->Map(0, nullptr, &uploadData));
 
     memcpy(uploadData, image.GetImageRawData(), image.GetTextureSize());
     
-    copyCommandList->CopyResource(textureBuffer.Get(), uploadBuffer.Get());
+    GFX_THROW_FAILED(copyCommandList->CopyResource(textureBuffer.Get(), uploadBuffer.Get()));
 
     ComPtr<ID3D12CommandQueue> queue = GraphicsFabric::CreateCommandQueue(D3D12_COMMAND_LIST_TYPE_DIRECT);
 
-    GFX_THROW_FAILED(copyCommandList->Close());
+    HR_THROW_FAILED(copyCommandList->Close());
 
     ComPtr<ID3D12Fence> fence = GraphicsFabric::CreateFence();
     UINT64 v = 0;
@@ -52,7 +53,7 @@ ComPtr<ID3D12Resource> GraphicsFabric::CreateTexture(void* textureImage) {
     SignalFence(queue, fence, v);
     WaitForFence(fence, v);
 
-    uploadBuffer->Unmap(0, nullptr);
+    GFX_THROW_FAILED(uploadBuffer->Unmap(0, nullptr));
 
     return textureBuffer;
 }
@@ -61,7 +62,7 @@ ComPtr<ID3D12Resource> GraphicsFabric::CreateUploadBuffer(ComPtr<ID3D12GraphicsC
                                                           SIZE_T bufferSize) {
     ComPtr<ID3D12Resource> uploadBuffer;
 
-    GFX_THROW_FAILED(gfx().m_Device->CreateCommittedResource(
+    HR_THROW_FAILED(gfx().m_Device->CreateCommittedResource(
         &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
         D3D12_HEAP_FLAG_NONE,
         &CD3DX12_RESOURCE_DESC::Buffer(bufferSize),
@@ -105,12 +106,12 @@ ComPtr<ID3D12Resource> GraphicsFabric::CreateGenericBuffer(const void* data, SIZ
 
     ComPtr<ID3D12CommandAllocator> copyCommandAllocator = GraphicsFabric::CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT);
     ComPtr<ID3D12GraphicsCommandList> copyCommandList = GraphicsFabric::CreateCommandList(D3D12_COMMAND_LIST_TYPE_DIRECT, copyCommandAllocator);
-    GFX_THROW_FAILED(copyCommandAllocator->Reset());
-    GFX_THROW_FAILED(copyCommandList->Reset(copyCommandAllocator.Get(), nullptr));
+    HR_THROW_FAILED(copyCommandAllocator->Reset());
+    HR_THROW_FAILED(copyCommandList->Reset(copyCommandAllocator.Get(), nullptr));
 
     ComPtr<ID3D12Resource> uploadBuffer = GraphicsFabric::CreateUploadBuffer(copyCommandList, bufferSize);
 
-    GFX_THROW_FAILED(gfx().m_Device->CreateCommittedResource(
+    HR_THROW_FAILED(gfx().m_Device->CreateCommittedResource(
         &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
         D3D12_HEAP_FLAG_NONE,
         &CD3DX12_RESOURCE_DESC::Buffer(bufferSize),
@@ -120,26 +121,26 @@ ComPtr<ID3D12Resource> GraphicsFabric::CreateGenericBuffer(const void* data, SIZ
     ));
 
     void* mappedUpload = nullptr;
-    GFX_THROW_FAILED(uploadBuffer->Map(0, nullptr, &mappedUpload));
+    HR_THROW_FAILED(uploadBuffer->Map(0, nullptr, &mappedUpload));
     memcpy(mappedUpload, data, bufferSize);
     uploadBuffer->Unmap(0, nullptr);
 
-    copyCommandList->CopyResource(buffer.Get(), uploadBuffer.Get());
+    GFX_THROW_FAILED(copyCommandList->CopyResource(buffer.Get(), uploadBuffer.Get()));
 
     ComPtr<ID3D12CommandQueue> queue = GraphicsFabric::CreateCommandQueue(D3D12_COMMAND_LIST_TYPE_DIRECT);
 
     if (bIndex) {
-        copyCommandList->ResourceBarrier(
+        GFX_THROW_FAILED(copyCommandList->ResourceBarrier(
             1,
             &CD3DX12_RESOURCE_BARRIER::Transition(buffer.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_INDEX_BUFFER)
-        );
+        ));
     }
 
-    GFX_THROW_FAILED(copyCommandList->Close());
+    HR_THROW_FAILED(copyCommandList->Close());
 
     ComPtr<ID3D12Fence> fence = GraphicsFabric::CreateFence();
     UINT64 v = 0;
-    queue->ExecuteCommandLists(1, (ID3D12CommandList* const*)copyCommandList.GetAddressOf());
+    GFX_THROW_FAILED(queue->ExecuteCommandLists(1, (ID3D12CommandList* const*)copyCommandList.GetAddressOf()));
     SignalFence(queue, fence, v);
     WaitForFence(fence, v);
 

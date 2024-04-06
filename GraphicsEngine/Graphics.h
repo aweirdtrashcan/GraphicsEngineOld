@@ -6,12 +6,6 @@
 class Graphics {
 	friend class GraphicsFabric;
 public:
-	class GraphicsException : StimplyException {
-	public:
-		GraphicsException(int line, const wchar_t* file, std::wstring_view reason);
-		virtual const wchar_t* GetType() const noexcept override;
-	};
-public:
 	class Fence {
 	public:
 		Fence() : m_Fence(nullptr), m_Value(0) {}

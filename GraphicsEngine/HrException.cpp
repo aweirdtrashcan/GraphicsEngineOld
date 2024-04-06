@@ -1,18 +1,11 @@
 #include "HrException.h"
 
-#include <sstream>
-
-std::wstring FromVectorToString(const std::vector<std::wstring>& errors) {
-	std::wstringstream oss;
-	oss << "\n\n";
-	for (size_t i = 0; i < errors.size(); i++) {
-		oss << errors[i] << "\n\n";
-	}
-
-	return oss.str();
+HrException::HrException(int line, const wchar_t* file, long hresult, const std::vector<std::wstring>& opt_errors)
+	:
+	StimplyException(line, file, TranslateHr(hresult, opt_errors))
+{
 }
 
-HrException::HrException(int line, const wchar_t* file, std::vector<std::wstring> errorVector)
-	:
-	StimplyException(line, file, FromVectorToString(errorVector))
-{}
+std::wstring_view HrException::TranslateHr(long hresult, const std::vector<std::wstring>& opt_errors) {
+	return std::wstring_view();
+}

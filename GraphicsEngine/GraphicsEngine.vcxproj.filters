@@ -171,6 +171,9 @@
     <ClInclude Include="..\include\imgui\backends\imgui_impl_win32.h">
       <Filter>Header Files\ImGui</Filter>
     </ClInclude>
+    <ClInclude Include="GraphicsException.h">
+      <Filter>Header Files\Exceptions</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Window.cpp">
@@ -259,6 +262,9 @@
     </ClCompile>
     <ClCompile Include="..\include\imgui\imgui_widgets.cpp">
       <Filter>Source Files\ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="GraphicsException.cpp">
+      <Filter>Source Files\Exceptions</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

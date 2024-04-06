@@ -7,6 +7,7 @@
 #pragma comment(lib, "dxguid.lib")
 
 #if IS_DEBUG
+#include <iostream>
 GraphicsDebug::GraphicsDebug() {
 	HMODULE debug = GetModuleHandleA("dxgidebug.dll");
 	if (!debug) {
@@ -23,6 +24,7 @@ GraphicsDebug::GraphicsDebug() {
 
 void GraphicsDebug::Clear() {
 	GraphicsDebug& dbg = GraphicsDebug::Get();
+	
 }
 
 static std::wstring AnsiToWide(const char* ansi) {

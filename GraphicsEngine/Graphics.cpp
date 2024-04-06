@@ -12,6 +12,8 @@
 #include "imgui/backends/imgui_impl_dx12.h"
 #include "imgui/backends/imgui_impl_win32.h"
 
+#include "GraphicsException.h"
+
 #pragma comment(lib, "d3d12.lib")
 #pragma comment(lib, "dxgi.lib")
 
@@ -33,7 +35,7 @@ Graphics::Graphics(UINT width, UINT height)
 		GRAPHICS_EXCEPTION(L"Failed to create d3d12 device");
 	}
 
-	GFX_THROW_FAILED(CreateDXGIFactory2(DXGI_CREATE_FACTORY_DEBUG, IID_PPV_ARGS(&m_Factory)));
+	HR_THROW_FAILED(CreateDXGIFactory2(DXGI_CREATE_FACTORY_DEBUG, IID_PPV_ARGS(&m_Factory)));
 
 	s_GraphicsInstance = this;
 	
@@ -196,11 +198,11 @@ ComPtr<IDXGISwapChain3> Graphics::CreateSwapchain(UINT width, UINT height) {
 	desc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
 	desc.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING;
 
-	GFX_THROW_FAILED(m_Factory->CreateSwapChain(
-		m_DirectCommandQueue.Get(),
-		&desc,
-		&swap
-	));
+	{
+		GraphicsDebug::Clear(); HRESULT hr = (m_Factory->CreateSwapChain(m_DirectCommandQueue.Get(), &desc, &swap)); auto v = GraphicsDebug::GetErrors(); if (!v.empty()) {
+			throw GraphicsException(203, __FILEW__, v);
+		}
+	};
 
 	GFX_THROW_FAILED(swap.As(&swap3));
 
@@ -264,13 +266,4 @@ void Graphics::RenderImGuiFrame() {
 
 	ImDrawData* drawData = ImGui::GetDrawData();
 	ImGui_ImplDX12_RenderDrawData(drawData, m_DirectCommandList.Get());
-}
-
-Graphics::GraphicsException::GraphicsException(int line, const wchar_t* file, std::wstring_view reason) 
-	:
-	StimplyException(line, file, reason)
-{}
-
-const wchar_t* Graphics::GraphicsException::GetType() const noexcept {
-	return L"Graphics Exception";
 }

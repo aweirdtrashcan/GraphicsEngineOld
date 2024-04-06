@@ -20,7 +20,7 @@ public:
 	static ComPtr<ID3D12CommandAllocator> CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE type) {
 		ComPtr<ID3D12CommandAllocator> allocator;
 
-		GFX_THROW_FAILED(gfx().m_Device->CreateCommandAllocator(
+		HR_THROW_FAILED(gfx().m_Device->CreateCommandAllocator(
 			type,
 			IID_PPV_ARGS(&allocator)
 		));
@@ -31,14 +31,14 @@ public:
 	static ComPtr<ID3D12GraphicsCommandList> CreateCommandList(D3D12_COMMAND_LIST_TYPE type, ComPtr<ID3D12CommandAllocator> allocator) {
 		ComPtr<ID3D12GraphicsCommandList> cmdList;
 
-		GFX_THROW_FAILED(
+		HR_THROW_FAILED(
 			gfx().m_Device->CreateCommandList(
 			0, type, allocator.Get(),
 			nullptr,
 			IID_PPV_ARGS(&cmdList))
 		);
 
-		GFX_THROW_FAILED(cmdList->Close());
+		HR_THROW_FAILED(cmdList->Close());
 
 		return cmdList;
 	}
@@ -50,7 +50,7 @@ public:
 			D3D12_COMMAND_QUEUE_DESC desc = {};
 			desc.Type = type;
 
-			GFX_THROW_FAILED(gfx().m_Device->CreateCommandQueue(&desc, IID_PPV_ARGS(&fabric.m_CommandQueue[type])));
+			HR_THROW_FAILED(gfx().m_Device->CreateCommandQueue(&desc, IID_PPV_ARGS(&fabric.m_CommandQueue[type])));
 		}
 
 		return fabric.m_CommandQueue[type];
@@ -59,14 +59,14 @@ public:
 	static ComPtr<ID3D12Fence> CreateFence(UINT64 initialValue = 0) {
 		ComPtr<ID3D12Fence> fence;
 
-		GFX_THROW_FAILED(gfx().m_Device->CreateFence(initialValue, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&fence)));
+		HR_THROW_FAILED(gfx().m_Device->CreateFence(initialValue, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&fence)));
 		return fence;
 	}
 
 	static void WaitForFence(ComPtr<ID3D12Fence> fence, UINT64 value) {
 		HANDLE event = CreateEventA(NULL, FALSE, FALSE, NULL);
 		if (fence->GetCompletedValue() < value) {
-			GFX_THROW_FAILED(fence->SetEventOnCompletion(value, event));
+			HR_THROW_FAILED(fence->SetEventOnCompletion(value, event));
 			WaitForSingleObject(event, DWORD_MAX);
 		}
 		CloseHandle(event);
@@ -74,13 +74,13 @@ public:
 
 	static void WaitForFence(ComPtr<ID3D12Fence> fence, UINT64 value, HANDLE event) {
 		if (fence->GetCompletedValue() < value) {
-			GFX_THROW_FAILED(fence->SetEventOnCompletion(value, event));
+			HR_THROW_FAILED(fence->SetEventOnCompletion(value, event));
 			WaitForSingleObject(event, DWORD_MAX);
 		}
 	}
 
 	static void SignalFence(ComPtr<ID3D12CommandQueue> queue, ComPtr<ID3D12Fence> fence, UINT64& value) {
-		GFX_THROW_FAILED(queue->Signal(fence.Get(), ++value));
+		HR_THROW_FAILED(queue->Signal(fence.Get(), ++value));
 	}
 
 	/// <summary>
@@ -105,7 +105,7 @@ public:
 	static ComPtr<ID3D12PipelineState> CreatePipelineState(const D3D12_GRAPHICS_PIPELINE_STATE_DESC& desc) {
 		ComPtr<ID3D12PipelineState> state;
 
-		GFX_THROW_FAILED(gfx().m_Device->CreateGraphicsPipelineState(&desc, IID_PPV_ARGS(&state)));
+		HR_THROW_FAILED(gfx().m_Device->CreateGraphicsPipelineState(&desc, IID_PPV_ARGS(&state)));
 		return state;
 	}
 
@@ -125,7 +125,7 @@ public:
 
 		ComPtr<ID3D12RootSignature> rootSignature;
 
-		GFX_THROW_FAILED(
+		HR_THROW_FAILED(
 			gfx().m_Device->CreateRootSignature(
 				0, 
 				successBlob->GetBufferPointer(), 
@@ -136,7 +136,7 @@ public:
 		return rootSignature;
 	}
 
-	static ComPtr<ID3D12DescriptorHeap> CreateDescriptorHeap(size_t descriptorCount, D3D12_DESCRIPTOR_HEAP_TYPE type) {
+	static ComPtr<ID3D12DescriptorHeap> CreateDescriptorHeap(UINT descriptorCount, D3D12_DESCRIPTOR_HEAP_TYPE type) {
 		ComPtr<ID3D12DescriptorHeap> dHeap;
 
 		D3D12_DESCRIPTOR_HEAP_DESC desc = {};
@@ -145,7 +145,7 @@ public:
 		desc.Flags = (type == D3D12_DESCRIPTOR_HEAP_TYPE_RTV || type == D3D12_DESCRIPTOR_HEAP_TYPE_DSV) ? 
 			D3D12_DESCRIPTOR_HEAP_FLAG_NONE : D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
 		
-		GFX_THROW_FAILED(Graphics::GetGraphics()->m_Device->CreateDescriptorHeap(&desc, IID_PPV_ARGS(&dHeap)));
+		HR_THROW_FAILED(Graphics::GetGraphics()->m_Device->CreateDescriptorHeap(&desc, IID_PPV_ARGS(&dHeap)));
 
 		return dHeap;
 	}

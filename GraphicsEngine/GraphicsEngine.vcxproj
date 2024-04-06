@@ -203,6 +203,7 @@
     <ClInclude Include="FreeListAllocator.h" />
     <ClInclude Include="Graphics.h" />
     <ClInclude Include="GraphicsDebug.h" />
+    <ClInclude Include="GraphicsException.h" />
     <ClInclude Include="GraphicsFabric.h" />
     <ClInclude Include="HrException.h" />
     <ClInclude Include="IBindable.h" />
@@ -240,6 +241,7 @@
     <ClCompile Include="FreeListAllocator.cpp" />
     <ClCompile Include="Graphics.cpp" />
     <ClCompile Include="GraphicsDebug.cpp" />
+    <ClCompile Include="GraphicsException.cpp" />
     <ClCompile Include="GraphicsFabric.cpp" />
     <ClCompile Include="HrException.cpp" />
     <ClCompile Include="IBindable.cpp" />
