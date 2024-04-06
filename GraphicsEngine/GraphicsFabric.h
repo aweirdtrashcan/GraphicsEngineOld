@@ -7,6 +7,7 @@
 #include "HrException.h"
 
 #include <unordered_map>
+#include <queue>
 #include <sstream>
 
 class GraphicsFabric {
@@ -98,6 +99,8 @@ public:
 
 	static ComPtr<ID3D12Resource> CreateGenericBuffer(const void* data,
 													  SIZE_T bufferSize, SIZE_T stride, bool bIndex = false);
+	static ComPtr<ID3D12Resource> CreateGenericBuffer(SIZE_T bufferSize);
+	static ComPtr<ID3D12Resource> CreateDepthBuffer(UINT width, UINT height, DXGI_FORMAT depthFormat);
 	
 	static ComPtr<ID3D12PipelineState> CreatePipelineState(const D3D12_GRAPHICS_PIPELINE_STATE_DESC& desc) {
 		ComPtr<ID3D12PipelineState> state;
@@ -131,6 +134,20 @@ public:
 		));
 
 		return rootSignature;
+	}
+
+	static ComPtr<ID3D12DescriptorHeap> CreateDescriptorHeap(size_t descriptorCount, D3D12_DESCRIPTOR_HEAP_TYPE type) {
+		ComPtr<ID3D12DescriptorHeap> dHeap;
+
+		D3D12_DESCRIPTOR_HEAP_DESC desc = {};
+		desc.Type = type;
+		desc.NumDescriptors = descriptorCount;
+		desc.Flags = (type == D3D12_DESCRIPTOR_HEAP_TYPE_RTV || type == D3D12_DESCRIPTOR_HEAP_TYPE_DSV) ? 
+			D3D12_DESCRIPTOR_HEAP_FLAG_NONE : D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+		
+		GFX_THROW_FAILED(Graphics::GetGraphics()->m_Device->CreateDescriptorHeap(&desc, IID_PPV_ARGS(&dHeap)));
+
+		return dHeap;
 	}
 
 private:

@@ -40,7 +40,9 @@ Graphics::Graphics(UINT width, UINT height)
 	m_DirectCommandAllocator = GraphicsFabric::CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT);
 	m_DirectCommandList = GraphicsFabric::CreateCommandList(D3D12_COMMAND_LIST_TYPE_DIRECT, m_DirectCommandAllocator);
 	m_DirectCommandQueue = GraphicsFabric::CreateCommandQueue(D3D12_COMMAND_LIST_TYPE_DIRECT);
+	m_CopyCommandQueue = GraphicsFabric::CreateCommandQueue(D3D12_COMMAND_LIST_TYPE_COPY);
 	m_GraphicsFence = GraphicsFabric::CreateFence();
+	m_CopyFence = GraphicsFabric::CreateFence();
 	m_Swapchain = CreateSwapchain(width, height);
 	m_FenceEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
 
@@ -51,16 +53,11 @@ Graphics::Graphics(UINT width, UINT height)
 
 	m_Scissor.right = static_cast<LONG>(width);
 	m_Scissor.bottom = static_cast<LONG>(height);
+	
+	m_DepthBuffer = GraphicsFabric::CreateDepthBuffer(width, height, s_DepthStencilFormat);
+	CreateDepthDescriptor(m_DepthBuffer, m_DepthDescriptorHeap);
 
-	D3D12_DESCRIPTOR_HEAP_DESC heapDesc = {};
-	heapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
-	heapDesc.NumDescriptors = 1;
-	heapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
-
-	GFX_THROW_FAILED(m_Device->CreateDescriptorHeap(
-		&heapDesc,
-		IID_PPV_ARGS(&m_SrvDescHeap)
-	));
+	m_SrvDescHeap = GraphicsFabric::CreateDescriptorHeap(1, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 
 	ImGui_ImplDX12_Init(
 		m_Device.Get(), s_BufferCount, s_BackBufferFormat,
@@ -103,13 +100,19 @@ void Graphics::ExecuteCommandLists(ID3D12CommandList** commandLists, UINT numCom
 		)
 	);
 
+	m_DirectCommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(
+		m_DepthBuffer.Get(),
+		D3D12_RESOURCE_STATE_DEPTH_WRITE,
+		D3D12_RESOURCE_STATE_DEPTH_READ
+	));
+
 	GFX_THROW_FAILED(m_DirectCommandList->Close());
 
 	ID3D12CommandList* cmdList = m_DirectCommandList.Get();
 
 	m_DirectCommandQueue->ExecuteCommandLists(1u, &cmdList);
-	GraphicsFabric::SignalFence(m_DirectCommandQueue, m_GraphicsFence, m_FenceValue);
-	GraphicsFabric::WaitForFence(m_GraphicsFence, m_FenceValue);
+	GraphicsFabric::SignalFence(m_DirectCommandQueue, m_GraphicsFence, m_GraphicsFence);
+	GraphicsFabric::WaitForFence(m_GraphicsFence, m_GraphicsFence);
 	m_BackBufferIndex = (m_BackBufferIndex + 1) % s_BufferCount;
 }
 
@@ -124,6 +127,7 @@ void Graphics::PrepareFrame() {
 	m_BackBufferIndex = m_Swapchain->GetCurrentBackBufferIndex();
 
 	D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = m_RTVHeap->GetCPUDescriptorHandleForHeapStart().At(m_BackBufferIndex, m_RTVIncrementSize);
+	D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = m_DepthDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
 
 	m_DirectCommandList->ResourceBarrier(
 		1,
@@ -134,9 +138,23 @@ void Graphics::PrepareFrame() {
 		)
 	);
 
+	m_DirectCommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(
+		m_DepthBuffer.Get(),
+		D3D12_RESOURCE_STATE_DEPTH_READ,
+		D3D12_RESOURCE_STATE_DEPTH_WRITE
+	));
+
 	FLOAT rtvColor[] = {0.3f, 0.3f, 0.6f, 1.0f};
 	m_DirectCommandList->ClearRenderTargetView(rtvHandle, rtvColor, 0u, NULL);
-	m_DirectCommandList->OMSetRenderTargets(1, &rtvHandle, FALSE, NULL);
+	m_DirectCommandList->ClearDepthStencilView(
+		m_DepthDescriptorHeap->GetCPUDescriptorHandleForHeapStart(),
+		D3D12_CLEAR_FLAG_DEPTH,
+		1.0f,
+		0,
+		0,
+		nullptr
+	);
+	m_DirectCommandList->OMSetRenderTargets(1, &rtvHandle, FALSE, &m_DepthDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
 
 	m_DirectCommandList->RSSetViewports(1u, &m_Viewport);
 	m_DirectCommandList->RSSetScissorRects(1u, &m_Scissor);
@@ -147,7 +165,7 @@ void Graphics::PrepareFrame() {
 }
 
 void Graphics::WaitDeviceIdle() {
-	GraphicsFabric::WaitForFence(m_GraphicsFence, m_FenceValue);
+	GraphicsFabric::WaitForFence(m_GraphicsFence, m_GraphicsFence);
 }
 
 void Graphics::ShowImGui() {
@@ -219,6 +237,20 @@ std::vector<ComPtr<ID3D12Resource>> Graphics::GetSwapchainBuffers(ComPtr<IDXGISw
 	}
 
 	return buffers;
+}
+
+void Graphics::CreateDepthDescriptor(ComPtr<ID3D12Resource> depthBuffer, ComPtr<ID3D12DescriptorHeap>& outDescriptorHeap) {
+	if (outDescriptorHeap == nullptr) {
+		outDescriptorHeap = GraphicsFabric::CreateDescriptorHeap(1, D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
+	}
+
+	D3D12_DEPTH_STENCIL_VIEW_DESC desc = {};
+	desc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
+	desc.Texture2D.MipSlice = 0;
+	desc.Flags = D3D12_DSV_FLAG_NONE;
+	desc.Format = s_DepthStencilFormat;
+
+	m_Device->CreateDepthStencilView(depthBuffer.Get(), &desc, outDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
 }
 
 void Graphics::PrepareImGuiFrame() {

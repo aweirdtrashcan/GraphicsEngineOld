@@ -12,6 +12,18 @@ public:
 		virtual const wchar_t* GetType() const noexcept override;
 	};
 public:
+	class Fence {
+	public:
+		Fence() : m_Fence(nullptr), m_Value(0) {}
+		Fence(ComPtr<ID3D12Fence> fence) : m_Fence(fence.Get()), m_Value(0) {}
+		ID3D12Fence* operator->() { return m_Fence.Get(); }
+		operator ComPtr<ID3D12Fence>() { return m_Fence.Get(); }
+		operator SIZE_T&() { return m_Value; }
+	private:
+		ComPtr<ID3D12Fence> m_Fence;
+		SIZE_T m_Value;
+	};
+public:
 	Graphics(UINT width, UINT height);
 	Graphics(RECT windowRect);
 	Graphics(const Graphics&) = delete;
@@ -29,6 +41,8 @@ private:
 
 	ComPtr<IDXGISwapChain3> CreateSwapchain(UINT width, UINT height);
 	std::vector<ComPtr<ID3D12Resource>> GetSwapchainBuffers(ComPtr<IDXGISwapChain3> swapchain, UINT numBuffers) const;
+	ComPtr<ID3D12Resource> CreateDepthBuffer(UINT width, UINT height);
+	void CreateDepthDescriptor(ComPtr<ID3D12Resource> depthBuffer, ComPtr<ID3D12DescriptorHeap>& outDescriptorHeap);
 
 	void PrepareImGuiFrame();
 	void RenderImGuiFrame();
@@ -50,14 +64,18 @@ private:
 	ComPtr<ID3D12CommandAllocator> m_DirectCommandAllocator;
 	ComPtr<ID3D12GraphicsCommandList> m_DirectCommandList;
 	ComPtr<ID3D12CommandQueue> m_DirectCommandQueue;
-	ComPtr<ID3D12Fence> m_GraphicsFence;
-	UINT64 m_FenceValue = 0;
+	ComPtr<ID3D12CommandQueue> m_CopyCommandQueue;
+	Fence m_GraphicsFence;
+	Fence m_CopyFence;
 	HANDLE m_FenceEvent;
 	D3D12_VIEWPORT m_Viewport{};
 	D3D12_RECT m_Scissor{};
 	UINT m_BackBufferIndex = 0;
 
-	// ImGuiTest
+	ComPtr<ID3D12Resource> m_DepthBuffer;
+	ComPtr<ID3D12DescriptorHeap> m_DepthDescriptorHeap;
+
+	// ImGuiHeap
 	ComPtr<ID3D12DescriptorHeap> m_SrvDescHeap;
 };
 
