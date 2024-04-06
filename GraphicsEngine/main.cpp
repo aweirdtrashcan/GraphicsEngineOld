@@ -2,6 +2,7 @@
 
 #include "Win.h"
 #include "StimplyException.h"
+#include "FreeListAllocator.h"
 
 static inline int run() {
 	try {

@@ -8,6 +8,6 @@
 #else
 #define STIMPLY_EXCEPTION(reason)
 #define GRAPHICS_EXCEPTION(reason)
-#define GFX_THROW_FAILED(hrcall) (hrcall)
+#define GFX_THROW_FAILED(hrcall) hrcall
 #define IMG_EXCEPTION(reason)
 #endif

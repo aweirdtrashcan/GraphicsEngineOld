@@ -68,6 +68,3 @@ Triangle::Triangle() {
 	AddBind(std::move(rootSig));
 	AddBind(std::move(pipeline));
 }
-
-Triangle::~Triangle() {
-}

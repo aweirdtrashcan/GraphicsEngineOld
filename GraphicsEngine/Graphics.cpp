@@ -85,7 +85,7 @@ void Graphics::ExecuteCommandLists(ID3D12CommandList** commandLists, UINT numCom
 	m_DirectCommandQueue->ExecuteCommandLists(1u, &cmdList);
 	GraphicsFabric::SignalFence(m_DirectCommandQueue, m_GraphicsFence, m_FenceValue);
 	GraphicsFabric::WaitForFence(m_GraphicsFence, m_FenceValue);
-	m_BackBufferIndex = ++m_BackBufferIndex % s_BufferCount;
+	m_BackBufferIndex = (m_BackBufferIndex + 1) % s_BufferCount;
 }
 
 void Graphics::Present() {

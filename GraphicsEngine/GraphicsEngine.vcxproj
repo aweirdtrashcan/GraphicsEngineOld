@@ -189,8 +189,10 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="Allocator.h" />
     <ClInclude Include="App.h" />
     <ClInclude Include="BindableCodex.h" />
+    <ClInclude Include="FreeListAllocator.h" />
     <ClInclude Include="Graphics.h" />
     <ClInclude Include="GraphicsDebug.h" />
     <ClInclude Include="GraphicsFabric.h" />
@@ -204,16 +206,21 @@
     <ClInclude Include="PrimitiveTopology.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="RootSignature.h" />
+    <ClInclude Include="SinglyLinkedList.h" />
+    <ClInclude Include="SinglyLinkedListImpl.h" />
     <ClInclude Include="StimplyException.h" />
     <ClInclude Include="Texture.h" />
     <ClInclude Include="Triangle.h" />
+    <ClInclude Include="Utils.h" />
     <ClInclude Include="VertexBuffer.h" />
     <ClInclude Include="Shader.h" />
     <ClInclude Include="Win.h" />
     <ClInclude Include="Window.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Allocator.cpp" />
     <ClCompile Include="App.cpp" />
+    <ClCompile Include="FreeListAllocator.cpp" />
     <ClCompile Include="Graphics.cpp" />
     <ClCompile Include="GraphicsDebug.cpp" />
     <ClCompile Include="GraphicsFabric.cpp" />
@@ -234,6 +241,7 @@
     <ClCompile Include="Window.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="AllocatorOperator.inl" />
     <None Include="Bindables.inl" />
     <None Include="D3DIncls.inl" />
     <None Include="packages.config" />

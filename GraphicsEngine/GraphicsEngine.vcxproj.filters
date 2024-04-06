@@ -40,6 +40,12 @@
     <Filter Include="Shaders">
       <UniqueIdentifier>{dea943bf-8153-4020-93b1-ca5ff1a4556a}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\Allocator">
+      <UniqueIdentifier>{57633f69-cbe5-4766-8f75-0c75d386e5a8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Allocator">
+      <UniqueIdentifier>{56b6a269-f82b-4c19-a3c4-f4b6717903b5}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Window.h">
@@ -108,6 +114,21 @@
     <ClInclude Include="PixGpuCapturer.h">
       <Filter>Header Files\Graphics</Filter>
     </ClInclude>
+    <ClInclude Include="FreeListAllocator.h">
+      <Filter>Header Files\Allocator</Filter>
+    </ClInclude>
+    <ClInclude Include="Allocator.h">
+      <Filter>Header Files\Allocator</Filter>
+    </ClInclude>
+    <ClInclude Include="SinglyLinkedList.h">
+      <Filter>Header Files\Allocator</Filter>
+    </ClInclude>
+    <ClInclude Include="SinglyLinkedListImpl.h">
+      <Filter>Header Files\Allocator</Filter>
+    </ClInclude>
+    <ClInclude Include="Utils.h">
+      <Filter>Header Files\Allocator</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Window.cpp">
@@ -167,6 +188,12 @@
     <ClCompile Include="PixGpuCapturer.cpp">
       <Filter>Source Files\Graphics</Filter>
     </ClCompile>
+    <ClCompile Include="FreeListAllocator.cpp">
+      <Filter>Source Files\Allocator</Filter>
+    </ClCompile>
+    <ClCompile Include="Allocator.cpp">
+      <Filter>Source Files\Allocator</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="D3DIncls.inl">
@@ -176,6 +203,9 @@
       <Filter>Header Files\Bindables</Filter>
     </None>
     <None Include="packages.config" />
+    <None Include="AllocatorOperator.inl">
+      <Filter>Header Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="VertexShader.hlsl">

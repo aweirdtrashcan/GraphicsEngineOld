@@ -5,6 +5,5 @@
 class Triangle : public IDrawable {
 public:
 	Triangle();
-	~Triangle();
 };
 
