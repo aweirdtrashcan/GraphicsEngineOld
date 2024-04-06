@@ -8,6 +8,7 @@ public:
 		VertexShader,
 		PixelShader
 	};
+
 public:
 	Shader(const wchar_t* shaderPath, Type type);
 	

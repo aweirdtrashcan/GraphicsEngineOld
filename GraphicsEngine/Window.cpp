@@ -3,12 +3,19 @@
 #include "StimplyException.h"
 #include "Macros.h"
 
+#include "imgui/imgui.h"
+#include "imgui/backends/imgui_impl_win32.h"
+
 bool Window::s_Initialized = false;
 Window* Window::s_WindowInstance = nullptr;
 
+extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
+
 Window::Window(UINT width, UINT height)
 	:
-	m_hInstance(GetModuleHandleW(0)) {
+	m_hInstance(GetModuleHandleW(0)),
+	m_WindowWidth(width),
+	m_WindowHeight(height) {
 
 	if (s_Initialized) {
 		STIMPLY_EXCEPTION(L"Trying to initialize Window more than once.");
@@ -35,10 +42,19 @@ Window::Window(UINT width, UINT height)
 
 	DWORD createWindowFlags = WS_EX_APPWINDOW | WS_EX_OVERLAPPEDWINDOW;
 
-	m_WindowRect.left = 0;
-	m_WindowRect.right = width;
-	m_WindowRect.top = 0;
-	m_WindowRect.bottom = height;
+	UINT offset = 100;
+	RECT windowRect;
+	windowRect.left = offset;
+	windowRect.right = m_WindowWidth + offset;
+	windowRect.top = offset;
+	windowRect.bottom = m_WindowHeight + offset;
+
+	AdjustWindowRectEx(
+		&windowRect,
+		WS_OVERLAPPEDWINDOW,
+		FALSE,
+		createWindowFlags
+	);
 
 	HWND hwnd = CreateWindowExW(
 		createWindowFlags,
@@ -46,21 +62,9 @@ Window::Window(UINT width, UINT height)
 		L"StimplyEngine",
 		WS_OVERLAPPEDWINDOW,
 		CW_USEDEFAULT, CW_USEDEFAULT,
-		width, height, NULL, NULL,
+		windowRect.right - windowRect.left, windowRect.bottom - windowRect.top, NULL, NULL,
 		m_hInstance, NULL
 	);
-
-	AdjustWindowRectEx(
-		&m_WindowRectOffset,
-		WS_OVERLAPPEDWINDOW,
-		FALSE,
-		createWindowFlags
-	);
-
-	m_WindowRect.bottom -= m_WindowRectOffset.bottom;
-	m_WindowRect.left -= m_WindowRectOffset.left;
-	m_WindowRect.top -= m_WindowRectOffset.top;
-	m_WindowRect.right -= m_WindowRectOffset.right;
 
 	if (!hwnd) {
 		STIMPLY_EXCEPTION(GetWindowsError());
@@ -70,11 +74,18 @@ Window::Window(UINT width, UINT height)
 
 	ShowWindow(m_hWnd, SW_SHOW);
 	
+	ImGui::CreateContext();
+	ImGui_ImplWin32_Init(m_hWnd);
+	
+	ImGui::StyleColorsDark();
+
 	s_WindowInstance = this;
 	s_Initialized = true;
 }
 
 Window::~Window() {
+	ImGui_ImplWin32_Shutdown();
+	ImGui::DestroyContext();
 	UnregisterClassW(L"EngineClassName", m_hInstance);
 }
 
@@ -94,15 +105,6 @@ int Window::ProcessMessages() const noexcept(!IS_DEBUG) {
 	return 0xF0D45E;
 }
 
-RECT Window::GetWindowRect() const noexcept(!IS_DEBUG) {
-	RECT rect;
-	rect.left = m_WindowRect.left + m_WindowRectOffset.left;
-	rect.right = m_WindowRect.right + m_WindowRectOffset.right;
-	rect.bottom = m_WindowRect.bottom + m_WindowRectOffset.bottom;
-	rect.top = m_WindowRect.top + m_WindowRectOffset.top;
-	return rect;
-}
-
 Window& Window::Get() noexcept(!IS_DEBUG) {
 	if (!s_WindowInstance)
 		STIMPLY_EXCEPTION(L"Trying to get a window instance that is not yet initialized!");
@@ -118,6 +120,16 @@ LRESULT Window::sWinProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 }
 
 LRESULT Window::WinProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
+	const ImGuiIO& imio = ImGui::GetIO();
+
+	if (ImGui_ImplWin32_WndProcHandler(hWnd, msg, wParam, lParam)) {
+		return true;
+	}
+
+	if (imio.WantCaptureKeyboard || imio.WantCaptureMouse) {
+		return true;
+	}
+
 	switch (msg) {
 		case WM_CLOSE: 
 		{

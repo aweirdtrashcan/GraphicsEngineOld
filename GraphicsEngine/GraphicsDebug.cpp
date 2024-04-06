@@ -45,10 +45,10 @@ std::vector<std::wstring> GraphicsDebug::GetErrors() {
 	for (UINT64 i = 0; i < storedMessages; i++) {
 		SIZE_T messageSize = 0;
 		dbg.m_InfoQueue->GetMessageW(DXGI_DEBUG_D3D12, i, nullptr, &messageSize);
-		DXGI_INFO_QUEUE_MESSAGE* message = (DXGI_INFO_QUEUE_MESSAGE*)alloca(messageSize);
-		memset(message, 0, messageSize);
+		DXGI_INFO_QUEUE_MESSAGE* message = (DXGI_INFO_QUEUE_MESSAGE*)new char[messageSize];
 		dbg.m_InfoQueue->GetMessageW(DXGI_DEBUG_D3D12, i, message, &messageSize);
 		dbg.m_ErrorList.push_back(AnsiToWide(message->pDescription));
+		delete[] message;
 	}
 	return dbg.m_ErrorList;
 }

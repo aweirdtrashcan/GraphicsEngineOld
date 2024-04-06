@@ -2,6 +2,9 @@
 
 #include "Graphics.h"
 #include "GraphicsFabric.h"
+#include "BindableCodex.h"
+
+#include <sstream>
 
 PipelineStateObject::PipelineStateObject(const RootSignature& rootSignature, const std::vector<D3D12_INPUT_ELEMENT_DESC>& elements,
 										 const std::vector<Shader>& shaders) {
@@ -44,4 +47,26 @@ PipelineStateObject::PipelineStateObject(const RootSignature& rootSignature, con
 
 void PipelineStateObject::Bind(ID3D12GraphicsCommandList* cmdList) noexcept {
 	cmdList->SetPipelineState(m_PipelineState.Get());
+}
+
+std::shared_ptr<PipelineStateObject> PipelineStateObject::Resolve(const RootSignature& rootSignature, const std::vector<D3D12_INPUT_ELEMENT_DESC>& elements, const std::vector<Shader>& shaders) {
+	return BindableCodex::Resolve<PipelineStateObject>(rootSignature, elements, shaders);
+}
+
+std::string PipelineStateObject::GenerateKey(const RootSignature& rootSignature, const std::vector<D3D12_INPUT_ELEMENT_DESC>& elements, const std::vector<Shader>& shaders, std::string key) {
+	std::stringstream oss;
+
+	oss << rootSignature.Serialize();
+
+	for (const D3D12_INPUT_ELEMENT_DESC& elem : elements) {
+		oss << elem.SemanticName;
+	}
+
+	for (const Shader& shader : shaders) {
+		oss << (UINT)shader.GetType();
+	}
+
+	oss << key;
+
+	return oss.str();
 }

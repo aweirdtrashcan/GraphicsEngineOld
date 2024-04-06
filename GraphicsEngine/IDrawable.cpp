@@ -1,6 +1,7 @@
 #include "IDrawable.h"
 
 #include "IndexBuffer.h"
+#include <exception>
 #include <pix3.h>
 
 ID3D12CommandList* IDrawable::RecordDrawCommands() const noexcept(!IS_DEBUG) {
@@ -27,6 +28,7 @@ void IDrawable::PrepareToDraw() noexcept(!IS_DEBUG) {
 }
 
 void IDrawable::AddBind(std::shared_ptr<IBindable> bind) noexcept(!IS_DEBUG) {
+	if (bind == nullptr) throw std::exception("Trying to bind a null pointer");
 	if (IndexBuffer* ib = dynamic_cast<IndexBuffer*>(bind.get())) {
 		m_IndicesCount = ib->GetIndicesCount();
 	}

@@ -8,6 +8,10 @@
 #include "GraphicsDebug.h"
 #include "HrException.h"
 
+#include "imgui/imgui.h"
+#include "imgui/backends/imgui_impl_dx12.h"
+#include "imgui/backends/imgui_impl_win32.h"
+
 #pragma comment(lib, "d3d12.lib")
 #pragma comment(lib, "dxgi.lib")
 
@@ -47,6 +51,23 @@ Graphics::Graphics(UINT width, UINT height)
 
 	m_Scissor.right = static_cast<LONG>(width);
 	m_Scissor.bottom = static_cast<LONG>(height);
+
+	D3D12_DESCRIPTOR_HEAP_DESC heapDesc = {};
+	heapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+	heapDesc.NumDescriptors = 1;
+	heapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+
+	GFX_THROW_FAILED(m_Device->CreateDescriptorHeap(
+		&heapDesc,
+		IID_PPV_ARGS(&m_SrvDescHeap)
+	));
+
+	ImGui_ImplDX12_Init(
+		m_Device.Get(), s_BufferCount, s_BackBufferFormat,
+		m_SrvDescHeap.Get(),
+		m_SrvDescHeap->GetCPUDescriptorHandleForHeapStart(),
+		m_SrvDescHeap->GetGPUDescriptorHandleForHeapStart()
+	);
 }
 
 Graphics::Graphics(RECT windowRect) 
@@ -54,7 +75,9 @@ Graphics::Graphics(RECT windowRect)
 	Graphics(windowRect.right, windowRect.bottom)
 {}
 
-Graphics::~Graphics() {}
+Graphics::~Graphics() {
+	ImGui_ImplDX12_Shutdown();
+}
 
 void Graphics::ExecuteCommandLists(ID3D12CommandList** commandLists, UINT numCommandLists) {
 
@@ -68,6 +91,8 @@ void Graphics::ExecuteCommandLists(ID3D12CommandList** commandLists, UINT numCom
 	GFX_THROW_FAILED(cmdList->Close());
 	m_DirectCommandList->ExecuteBundle(cmdList);
 	}
+
+	RenderImGuiFrame();
 
 	m_DirectCommandList->ResourceBarrier(
 		1,
@@ -96,6 +121,8 @@ void Graphics::PrepareFrame() {
 	GFX_THROW_FAILED(m_DirectCommandAllocator->Reset());
 	GFX_THROW_FAILED(m_DirectCommandList->Reset(m_DirectCommandAllocator.Get(), nullptr));
 
+	m_BackBufferIndex = m_Swapchain->GetCurrentBackBufferIndex();
+
 	D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = m_RTVHeap->GetCPUDescriptorHandleForHeapStart().At(m_BackBufferIndex, m_RTVIncrementSize);
 
 	m_DirectCommandList->ResourceBarrier(
@@ -113,15 +140,26 @@ void Graphics::PrepareFrame() {
 
 	m_DirectCommandList->RSSetViewports(1u, &m_Viewport);
 	m_DirectCommandList->RSSetScissorRects(1u, &m_Scissor);
+
+	m_DirectCommandList->SetDescriptorHeaps(1, m_SrvDescHeap.GetAddressOf());
+
+	PrepareImGuiFrame();
 }
 
 void Graphics::WaitDeviceIdle() {
 	GraphicsFabric::WaitForFence(m_GraphicsFence, m_FenceValue);
 }
 
-ComPtr<IDXGISwapChain2> Graphics::CreateSwapchain(UINT width, UINT height) {
+void Graphics::ShowImGui() {
+
+	static bool s_ShowDemoWindow = true;
+
+	ImGui::ShowDemoWindow(&s_ShowDemoWindow);
+}
+
+ComPtr<IDXGISwapChain3> Graphics::CreateSwapchain(UINT width, UINT height) {
 	ComPtr<IDXGISwapChain> swap;
-	ComPtr<IDXGISwapChain2> swap2;
+	ComPtr<IDXGISwapChain3> swap3;
 	
 	DXGI_SWAP_CHAIN_DESC desc = {};
 	desc.BufferCount = s_BufferCount;
@@ -146,7 +184,7 @@ ComPtr<IDXGISwapChain2> Graphics::CreateSwapchain(UINT width, UINT height) {
 		&swap
 	));
 
-	GFX_THROW_FAILED(swap.As(&swap2));
+	GFX_THROW_FAILED(swap.As(&swap3));
 
 	if (m_RTVHeap == nullptr) {
 		D3D12_DESCRIPTOR_HEAP_DESC heapDesc = {};
@@ -159,7 +197,7 @@ ComPtr<IDXGISwapChain2> Graphics::CreateSwapchain(UINT width, UINT height) {
 	}
 
 	for (UINT i = 0; i < s_BufferCount; i++) {
-		GFX_THROW_FAILED(swap2->GetBuffer(i, IID_PPV_ARGS(&m_BackBuffers[i])));
+		GFX_THROW_FAILED(swap3->GetBuffer(i, IID_PPV_ARGS(&m_BackBuffers[i])));
 
 		m_Device->CreateRenderTargetView(
 			m_BackBuffers[i].Get(),
@@ -168,10 +206,10 @@ ComPtr<IDXGISwapChain2> Graphics::CreateSwapchain(UINT width, UINT height) {
 		);
 	}
 
-	return swap2;
+	return swap3;
 }
 
-std::vector<ComPtr<ID3D12Resource>> Graphics::GetSwapchainBuffers(ComPtr<IDXGISwapChain2> swapchain, UINT numBuffers) const {
+std::vector<ComPtr<ID3D12Resource>> Graphics::GetSwapchainBuffers(ComPtr<IDXGISwapChain3> swapchain, UINT numBuffers) const {
 	std::vector<ComPtr<ID3D12Resource>> buffers(numBuffers);
 
 	for (UINT i = 0; i < numBuffers; i++) {
@@ -181,6 +219,19 @@ std::vector<ComPtr<ID3D12Resource>> Graphics::GetSwapchainBuffers(ComPtr<IDXGISw
 	}
 
 	return buffers;
+}
+
+void Graphics::PrepareImGuiFrame() {
+	ImGui_ImplDX12_NewFrame();
+	ImGui_ImplWin32_NewFrame();
+	ImGui::NewFrame();
+}
+
+void Graphics::RenderImGuiFrame() {
+	ImGui::Render();
+
+	ImDrawData* drawData = ImGui::GetDrawData();
+	ImGui_ImplDX12_RenderDrawData(drawData, m_DirectCommandList.Get());
 }
 
 Graphics::GraphicsException::GraphicsException(int line, const wchar_t* file, std::wstring_view reason) 

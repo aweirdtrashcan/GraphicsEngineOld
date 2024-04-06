@@ -46,6 +46,18 @@
     <Filter Include="Source Files\Allocator">
       <UniqueIdentifier>{56b6a269-f82b-4c19-a3c4-f4b6717903b5}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\UUID">
+      <UniqueIdentifier>{7c5a01b7-cc78-4a31-9e7b-1a95c78921c3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\UUID">
+      <UniqueIdentifier>{f5b433d4-6a5e-41a9-b2d7-10ddf538af1e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\ImGui">
+      <UniqueIdentifier>{771e3e62-2590-48f2-b7b6-869d1b04ff8b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\ImGui">
+      <UniqueIdentifier>{a7f28d0f-a7b2-4d26-a1ba-0d1b54c62a0a}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Window.h">
@@ -129,6 +141,36 @@
     <ClInclude Include="Utils.h">
       <Filter>Header Files\Allocator</Filter>
     </ClInclude>
+    <ClInclude Include="ISerializable.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="UUID.h">
+      <Filter>Header Files\UUID</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\imgui\imconfig.h">
+      <Filter>Header Files\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\imgui\imgui.h">
+      <Filter>Header Files\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\imgui\imgui_internal.h">
+      <Filter>Header Files\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\imgui\imstb_rectpack.h">
+      <Filter>Header Files\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\imgui\imstb_textedit.h">
+      <Filter>Header Files\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\imgui\imstb_truetype.h">
+      <Filter>Header Files\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\imgui\backends\imgui_impl_dx12.h">
+      <Filter>Header Files\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\imgui\backends\imgui_impl_win32.h">
+      <Filter>Header Files\ImGui</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Window.cpp">
@@ -194,6 +236,30 @@
     <ClCompile Include="Allocator.cpp">
       <Filter>Source Files\Allocator</Filter>
     </ClCompile>
+    <ClCompile Include="UUID.cpp">
+      <Filter>Source Files\UUID</Filter>
+    </ClCompile>
+    <ClCompile Include="..\include\imgui\backends\imgui_impl_dx12.cpp">
+      <Filter>Source Files\ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\include\imgui\backends\imgui_impl_win32.cpp">
+      <Filter>Source Files\ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\include\imgui\imgui.cpp">
+      <Filter>Source Files\ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\include\imgui\imgui_demo.cpp">
+      <Filter>Source Files\ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\include\imgui\imgui_draw.cpp">
+      <Filter>Source Files\ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\include\imgui\imgui_tables.cpp">
+      <Filter>Source Files\ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\include\imgui\imgui_widgets.cpp">
+      <Filter>Source Files\ImGui</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="D3DIncls.inl">
@@ -204,7 +270,7 @@
     </None>
     <None Include="packages.config" />
     <None Include="AllocatorOperator.inl">
-      <Filter>Header Files</Filter>
+      <Filter>Header Files\Allocator</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>

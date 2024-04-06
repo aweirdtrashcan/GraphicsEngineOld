@@ -8,22 +8,25 @@
 
 class BindableCodex {
 public:
-	BindableCodex() = delete;
+	static BindableCodex& Get() {
+		static BindableCodex m_Instance;
+		return m_Instance;
+	}
 
 	template<typename T, typename... Args>
 	static std::shared_ptr<T> Resolve(Args&&... args) {
-		return ResolveImpl(std::forward(args));
+		return ResolveImpl<T>(std::forward<Args>(args)...);
 	}
 private:
 	template<typename T, typename... Args>
 	static std::shared_ptr<T> ResolveImpl(Args&&... args) {
-		std::string key = T::Resolve(args);
-		if (bindables.find(key) == bindables.end()) {
-			std::shared_ptr<T> b = std::make_shared<T>(std::forward(args));
-			bindables[key] = std::move(b);
+		auto key = T::GenerateKey(std::forward<Args>(args)...);
+		if (Get().bindables.find(key) == Get().bindables.end()) {
+			std::shared_ptr<T> b = std::make_shared<T>(std::forward<Args>(args)...);
+			Get().bindables[key] = std::move(b);
 		}
 
-		return bindables[key];
+		return std::static_pointer_cast<T, IBindable>(Get().bindables[key]);
 	}
 private:
 	std::unordered_map<std::string, std::shared_ptr<IBindable>> bindables;

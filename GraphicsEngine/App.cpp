@@ -5,7 +5,7 @@
 App::App() 
 	:
 	m_Window(800, 600),
-	m_Graphics(m_Window.GetWindowRect())
+	m_Graphics(m_Window.GetWindowWidth(), m_Window.GetWindowHeight())
 {
 	m_Triangle = std::make_unique<Triangle>();
 }
@@ -28,6 +28,7 @@ int App::Run() {
 
 void App::DoFrame() {
 	m_Graphics.PrepareFrame();
+	m_Graphics.ShowImGui();
 	ID3D12CommandList* cmd = m_Triangle->RecordDrawCommands();
 	m_Graphics.ExecuteCommandLists(&cmd, 1);
 	m_Graphics.Present();

@@ -3,7 +3,9 @@
 #include "Win.h"
 #include "StimplyException.h"
 #include "FreeListAllocator.h"
+#include "UUID.h"
 
+#if IS_DEBUG
 static inline int run() {
 	try {
 		return App{}.Run();
@@ -14,6 +16,11 @@ static inline int run() {
 	}
 	return -1;
 }
+#else
+static inline int run() {
+	return App{}.Run();
+}
+#endif
 
 #if IS_DEBUG
 int main() {

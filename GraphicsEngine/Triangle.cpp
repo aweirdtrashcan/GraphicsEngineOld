@@ -28,20 +28,22 @@ Triangle::Triangle() {
 		{ 0.5, -0.5f, 0.0f, 0.0f, 0.0f, 1.0f } 
 	};
 
-	std::shared_ptr<VertexBuffer> vBuffer = std::make_shared<VertexBuffer>(
+	std::shared_ptr<VertexBuffer> vBuffer = VertexBuffer::Resolve(
 		m_CommandList, 
 		v,
 		_countof(v),
-		sizeof(v[0])
+		sizeof(v[0]),
+		"TriangleVB"
 	);
 
 	unsigned int i[] = { 0, 1, 2 };
 
-	std::shared_ptr<IndexBuffer> iBuffer = std::make_shared<IndexBuffer>(
+	std::shared_ptr<IndexBuffer> iBuffer = IndexBuffer::Resolve(
 		m_CommandList,
 		i,
 		_countof(i),
-		sizeof(i[0])
+		sizeof(i[0]),
+		"TriangleIBuf"
 	);
 
 	AddBind(std::move(vBuffer));
@@ -58,13 +60,13 @@ Triangle::Triangle() {
 	shaders.push_back({ L"Shaders/VertexShader.cso", Shader::Type::VertexShader });
 	shaders.push_back({ L"Shaders/PixelShader.cso", Shader::Type::PixelShader });
 
-	std::shared_ptr<PipelineStateObject> pipeline = std::make_shared<PipelineStateObject>(
+	std::shared_ptr<PipelineStateObject> pipeline = PipelineStateObject::Resolve(
 		*rootSig.get(),
 		ied,
 		shaders
 	);
 
-	AddBind(std::make_shared<PrimitiveTopology>(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST));
+	AddBind(PrimitiveTopology::Resolve(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST));
 	AddBind(std::move(rootSig));
 	AddBind(std::move(pipeline));
 }

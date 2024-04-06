@@ -20,3 +20,7 @@ RootSignature::RootSignature() {
 void RootSignature::Bind(ID3D12GraphicsCommandList* cmdList) noexcept {
 	cmdList->SetGraphicsRootSignature(m_RootSignature.Get());
 }
+
+const char* RootSignature::Serialize() const noexcept {
+	return "not used yet";
+}

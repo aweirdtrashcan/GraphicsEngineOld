@@ -12,9 +12,10 @@ public:
 	~Window();
 
 	int ProcessMessages() const noexcept(!IS_DEBUG);
-	RECT GetWindowRect() const noexcept(!IS_DEBUG);
 	HWND GetHandleToWindow() const noexcept(!IS_DEBUG) { return m_hWnd; }
 	static Window& Get() noexcept(!IS_DEBUG);
+	UINT GetWindowWidth() const { return m_WindowWidth; }
+	UINT GetWindowHeight() const { return m_WindowHeight; }
 
 private:
 	static LRESULT CALLBACK sWinProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
@@ -26,6 +27,6 @@ private:
 	HWND m_hWnd = 0;
 	static bool s_Initialized;
 	static Window* s_WindowInstance;
-	RECT m_WindowRect{};
-	RECT m_WindowRectOffset{};
+	UINT m_WindowWidth;
+	UINT m_WindowHeight;
 };
