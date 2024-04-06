@@ -9,6 +9,6 @@ public:
 	virtual const wchar_t* GetType() const noexcept { return L"HR Exception"; }
 	
 private:
-	std::wstring_view TranslateHr(long hresult, const std::vector<std::wstring>& opt_errors);
+	std::wstring TranslateHr(long hresult, const std::vector<std::wstring>& opt_errors);
 };
 

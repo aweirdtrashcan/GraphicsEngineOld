@@ -87,32 +87,32 @@ void Graphics::ExecuteCommandLists(ID3D12CommandList** commandLists, UINT numCom
 		__debugbreak();
 	}
 #endif
-	GFX_THROW_FAILED(cmdList->Close());
-	m_DirectCommandList->ExecuteBundle(cmdList);
+	HR_THROW_FAILED(cmdList->Close());
+	GFX_THROW_FAILED(m_DirectCommandList->ExecuteBundle(cmdList));
 	}
 
 	RenderImGuiFrame();
 
-	m_DirectCommandList->ResourceBarrier(
+	GFX_THROW_FAILED(m_DirectCommandList->ResourceBarrier(
 		1,
 		&CD3DX12_RESOURCE_BARRIER::Transition(
 			m_BackBuffers[m_BackBufferIndex].Get(),
 			D3D12_RESOURCE_STATE_RENDER_TARGET,
 			D3D12_RESOURCE_STATE_PRESENT
 		)
-	);
+	));
 
-	m_DirectCommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(
+	GFX_THROW_FAILED(m_DirectCommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(
 		m_DepthBuffer.Get(),
 		D3D12_RESOURCE_STATE_DEPTH_WRITE,
 		D3D12_RESOURCE_STATE_DEPTH_READ
-	));
+	)));
 
-	GFX_THROW_FAILED(m_DirectCommandList->Close());
+	HR_THROW_FAILED(m_DirectCommandList->Close());
 
 	ID3D12CommandList* cmdList = m_DirectCommandList.Get();
 
-	m_DirectCommandQueue->ExecuteCommandLists(1u, &cmdList);
+	GFX_THROW_FAILED(m_DirectCommandQueue->ExecuteCommandLists(1u, &cmdList));
 	GraphicsFabric::SignalFence(m_DirectCommandQueue, m_GraphicsFence, m_GraphicsFence);
 	GraphicsFabric::WaitForFence(m_GraphicsFence, m_GraphicsFence);
 	m_BackBufferIndex = (m_BackBufferIndex + 1) % s_BufferCount;
@@ -123,45 +123,45 @@ void Graphics::Present() {
 }
 
 void Graphics::PrepareFrame() {
-	GFX_THROW_FAILED(m_DirectCommandAllocator->Reset());
-	GFX_THROW_FAILED(m_DirectCommandList->Reset(m_DirectCommandAllocator.Get(), nullptr));
+	HR_THROW_FAILED(m_DirectCommandAllocator->Reset());
+	HR_THROW_FAILED(m_DirectCommandList->Reset(m_DirectCommandAllocator.Get(), nullptr));
 
 	m_BackBufferIndex = m_Swapchain->GetCurrentBackBufferIndex();
 
 	D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = m_RTVHeap->GetCPUDescriptorHandleForHeapStart().At(m_BackBufferIndex, m_RTVIncrementSize);
 	D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = m_DepthDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
 
-	m_DirectCommandList->ResourceBarrier(
+	GFX_THROW_FAILED(m_DirectCommandList->ResourceBarrier(
 		1,
 		&CD3DX12_RESOURCE_BARRIER::Transition(
 			m_BackBuffers[m_BackBufferIndex].Get(), 
 			D3D12_RESOURCE_STATE_COMMON, 
 			D3D12_RESOURCE_STATE_RENDER_TARGET
 		)
-	);
+	));
 
-	m_DirectCommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(
+	GFX_THROW_FAILED(m_DirectCommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(
 		m_DepthBuffer.Get(),
 		D3D12_RESOURCE_STATE_DEPTH_READ,
 		D3D12_RESOURCE_STATE_DEPTH_WRITE
-	));
+	)));
 
 	FLOAT rtvColor[] = {0.3f, 0.3f, 0.6f, 1.0f};
-	m_DirectCommandList->ClearRenderTargetView(rtvHandle, rtvColor, 0u, NULL);
-	m_DirectCommandList->ClearDepthStencilView(
+	GFX_THROW_FAILED(m_DirectCommandList->ClearRenderTargetView(rtvHandle, rtvColor, 0u, NULL));
+	GFX_THROW_FAILED(m_DirectCommandList->ClearDepthStencilView(
 		m_DepthDescriptorHeap->GetCPUDescriptorHandleForHeapStart(),
 		D3D12_CLEAR_FLAG_DEPTH,
 		1.0f,
 		0,
 		0,
 		nullptr
-	);
-	m_DirectCommandList->OMSetRenderTargets(1, &rtvHandle, FALSE, &m_DepthDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
+	));
+	GFX_THROW_FAILED(m_DirectCommandList->OMSetRenderTargets(1, &rtvHandle, FALSE, &m_DepthDescriptorHeap->GetCPUDescriptorHandleForHeapStart()));
 
-	m_DirectCommandList->RSSetViewports(1u, &m_Viewport);
-	m_DirectCommandList->RSSetScissorRects(1u, &m_Scissor);
+	GFX_THROW_FAILED(m_DirectCommandList->RSSetViewports(1u, &m_Viewport));
+	GFX_THROW_FAILED(m_DirectCommandList->RSSetScissorRects(1u, &m_Scissor));
 
-	m_DirectCommandList->SetDescriptorHeaps(1, m_SrvDescHeap.GetAddressOf());
+	GFX_THROW_FAILED(m_DirectCommandList->SetDescriptorHeaps(1, m_SrvDescHeap.GetAddressOf()));
 
 	PrepareImGuiFrame();
 }
@@ -198,32 +198,28 @@ ComPtr<IDXGISwapChain3> Graphics::CreateSwapchain(UINT width, UINT height) {
 	desc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
 	desc.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING;
 
-	{
-		GraphicsDebug::Clear(); HRESULT hr = (m_Factory->CreateSwapChain(m_DirectCommandQueue.Get(), &desc, &swap)); auto v = GraphicsDebug::GetErrors(); if (!v.empty()) {
-			throw GraphicsException(203, __FILEW__, v);
-		}
-	};
+	HR_THROW_FAILED(m_Factory->CreateSwapChain(m_DirectCommandQueue.Get(), &desc, &swap));
 
-	GFX_THROW_FAILED(swap.As(&swap3));
+	HR_THROW_FAILED(swap.As(&swap3));
 
 	if (m_RTVHeap == nullptr) {
 		D3D12_DESCRIPTOR_HEAP_DESC heapDesc = {};
 		heapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
 		heapDesc.NumDescriptors = s_BufferCount;
 		heapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
-		GFX_THROW_FAILED(m_Device->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(&m_RTVHeap)));
+		HR_THROW_FAILED(m_Device->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(&m_RTVHeap)));
 
 		m_RTVIncrementSize = m_Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 	}
 
 	for (UINT i = 0; i < s_BufferCount; i++) {
-		GFX_THROW_FAILED(swap3->GetBuffer(i, IID_PPV_ARGS(&m_BackBuffers[i])));
+		HR_THROW_FAILED(swap3->GetBuffer(i, IID_PPV_ARGS(&m_BackBuffers[i])));
 
-		m_Device->CreateRenderTargetView(
+		GFX_THROW_FAILED(m_Device->CreateRenderTargetView(
 			m_BackBuffers[i].Get(),
 			nullptr,
 			m_RTVHeap->GetCPUDescriptorHandleForHeapStart().At(i, m_RTVIncrementSize)
-		);
+		));
 	}
 
 	return swap3;
@@ -234,7 +230,7 @@ std::vector<ComPtr<ID3D12Resource>> Graphics::GetSwapchainBuffers(ComPtr<IDXGISw
 
 	for (UINT i = 0; i < numBuffers; i++) {
 		ComPtr<ID3D12Resource> currBuffer;
-		GFX_THROW_FAILED(swapchain->GetBuffer(i, IID_PPV_ARGS(&currBuffer)));
+		HR_THROW_FAILED(swapchain->GetBuffer(i, IID_PPV_ARGS(&currBuffer)));
 		buffers[i] = std::move(currBuffer);
 	}
 
@@ -252,7 +248,7 @@ void Graphics::CreateDepthDescriptor(ComPtr<ID3D12Resource> depthBuffer, ComPtr<
 	desc.Flags = D3D12_DSV_FLAG_NONE;
 	desc.Format = s_DepthStencilFormat;
 
-	m_Device->CreateDepthStencilView(depthBuffer.Get(), &desc, outDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
+	GFX_THROW_FAILED(m_Device->CreateDepthStencilView(depthBuffer.Get(), &desc, outDescriptorHeap->GetCPUDescriptorHandleForHeapStart()));
 }
 
 void Graphics::PrepareImGuiFrame() {

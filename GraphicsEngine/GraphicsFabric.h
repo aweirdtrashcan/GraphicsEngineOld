@@ -10,6 +10,8 @@
 #include <queue>
 #include <sstream>
 
+#include "GraphicsException.h"
+
 class GraphicsFabric {
 public:
 	static GraphicsFabric& Get() {

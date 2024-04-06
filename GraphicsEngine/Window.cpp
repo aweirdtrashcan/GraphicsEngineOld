@@ -84,6 +84,8 @@ Window::Window(UINT width, UINT height)
 }
 
 Window::~Window() {
+	s_Initialized = false;
+	s_WindowInstance = nullptr;
 	ImGui_ImplWin32_Shutdown();
 	ImGui::DestroyContext();
 	UnregisterClassW(L"EngineClassName", m_hInstance);
@@ -95,12 +97,10 @@ int Window::ProcessMessages() const noexcept(!IS_DEBUG) {
 
 	while (PeekMessageW(&msg, NULL, 0, 0, PM_REMOVE) > 0) {
 		TranslateMessage(&msg);
-
+		DispatchMessageW(&msg);
 		if (msg.message == WM_QUIT) {
 			return 0;
 		}
-
-		DispatchMessageW(&msg);
 	}
 	return 0xF0D45E;
 }
