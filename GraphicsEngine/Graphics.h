@@ -35,16 +35,17 @@ private:
 
 	ComPtr<IDXGISwapChain3> CreateSwapchain(UINT width, UINT height);
 	std::vector<ComPtr<ID3D12Resource>> GetSwapchainBuffers(ComPtr<IDXGISwapChain3> swapchain, UINT numBuffers) const;
-	ComPtr<ID3D12Resource> CreateDepthBuffer(UINT width, UINT height);
 	void CreateDepthDescriptor(ComPtr<ID3D12Resource> depthBuffer, ComPtr<ID3D12DescriptorHeap>& outDescriptorHeap);
 
 	void PrepareImGuiFrame();
 	void RenderImGuiFrame();
 
-private:
+public:
 	static inline constexpr UINT s_BufferCount = 2;
-	static inline DXGI_FORMAT s_BackBufferFormat = DXGI_FORMAT_B8G8R8A8_UNORM;
-	static inline DXGI_FORMAT s_DepthStencilFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
+	static inline const DXGI_FORMAT s_BackBufferFormat = DXGI_FORMAT_B8G8R8A8_UNORM;
+	static inline const DXGI_FORMAT s_DepthStencilFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
+
+private:
 	static inline Graphics* s_GraphicsInstance = nullptr;
 
 	UINT m_Width;

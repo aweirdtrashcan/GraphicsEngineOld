@@ -88,7 +88,7 @@ public:
 	/// <summary>
 	/// Thread-blocking function to create a Texture.
 	/// </summary>
-	static ComPtr<ID3D12Resource> CreateTexture(void* textureImage);
+	static ComPtr<ID3D12Resource> CreateTextureImage(void* textureImage);
 	static ComPtr<ID3D12Resource> CreateUploadBuffer(ComPtr<ID3D12GraphicsCommandList> resettedCommandList, SIZE_T bufferSize);
 	/// <summary>
 	/// Returns a vertex buffer.

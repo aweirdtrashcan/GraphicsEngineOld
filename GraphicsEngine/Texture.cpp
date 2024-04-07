@@ -11,7 +11,7 @@
 Texture::Texture(std::string_view texturePath) {
 	TextureImage image(texturePath);
 
-	GraphicsFabric::CreateTexture(&image);
+	GraphicsFabric::CreateTextureImage(&image);
 }
 
 void Texture::Bind(ID3D12GraphicsCommandList* cmdList) noexcept {
