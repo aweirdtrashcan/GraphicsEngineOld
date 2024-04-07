@@ -13,7 +13,7 @@ public:
 
 	int ProcessMessages() const noexcept(!IS_DEBUG);
 	HWND GetHandleToWindow() const noexcept(!IS_DEBUG) { return m_hWnd; }
-	static Window& Get() noexcept(!IS_DEBUG);
+	static const Window* Get();
 	UINT GetWindowWidth() const { return m_WindowWidth; }
 	UINT GetWindowHeight() const { return m_WindowHeight; }
 
@@ -25,7 +25,6 @@ private:
 private:
 	HINSTANCE m_hInstance = 0;
 	HWND m_hWnd = 0;
-	static bool s_Initialized;
 	static Window* s_WindowInstance;
 	UINT m_WindowWidth;
 	UINT m_WindowHeight;

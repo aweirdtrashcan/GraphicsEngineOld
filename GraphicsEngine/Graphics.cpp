@@ -194,7 +194,7 @@ ComPtr<IDXGISwapChain3> Graphics::CreateSwapchain(UINT width, UINT height) {
 	desc.SampleDesc.Count = 1;
 	desc.SampleDesc.Quality = 0;
 	desc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-	desc.OutputWindow = Window::Get().GetHandleToWindow();
+	desc.OutputWindow = Window::Get()->GetHandleToWindow();
 	desc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
 	desc.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING;
 
@@ -203,12 +203,7 @@ ComPtr<IDXGISwapChain3> Graphics::CreateSwapchain(UINT width, UINT height) {
 	HR_THROW_FAILED(swap.As(&swap3));
 
 	if (m_RTVHeap == nullptr) {
-		D3D12_DESCRIPTOR_HEAP_DESC heapDesc = {};
-		heapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
-		heapDesc.NumDescriptors = s_BufferCount;
-		heapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
-		HR_THROW_FAILED(m_Device->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(&m_RTVHeap)));
-
+		m_RTVHeap = GraphicsFabric::CreateDescriptorHeap(s_BufferCount, D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 		m_RTVIncrementSize = m_Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 	}
 

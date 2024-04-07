@@ -6,7 +6,6 @@
 #include "imgui/imgui.h"
 #include "imgui/backends/imgui_impl_win32.h"
 
-bool Window::s_Initialized = false;
 Window* Window::s_WindowInstance = nullptr;
 
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
@@ -17,7 +16,7 @@ Window::Window(UINT width, UINT height)
 	m_WindowWidth(width),
 	m_WindowHeight(height) {
 
-	if (s_Initialized) {
+	if (s_WindowInstance) {
 		STIMPLY_EXCEPTION(L"Trying to initialize Window more than once.");
 	}
 
@@ -80,11 +79,9 @@ Window::Window(UINT width, UINT height)
 	ImGui::StyleColorsDark();
 
 	s_WindowInstance = this;
-	s_Initialized = true;
 }
 
 Window::~Window() {
-	s_Initialized = false;
 	s_WindowInstance = nullptr;
 	ImGui_ImplWin32_Shutdown();
 	ImGui::DestroyContext();
@@ -105,16 +102,13 @@ int Window::ProcessMessages() const noexcept(!IS_DEBUG) {
 	return 0xF0D45E;
 }
 
-Window& Window::Get() noexcept(!IS_DEBUG) {
-	if (!s_WindowInstance)
-		STIMPLY_EXCEPTION(L"Trying to get a window instance that is not yet initialized!");
-
-	return *s_WindowInstance;
+const Window* Window::Get() {
+	return s_WindowInstance;
 }
 
 LRESULT Window::sWinProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
-	if (s_Initialized) {
-		return Window::Get().WinProc(hWnd, msg, wParam, lParam);
+	if (s_WindowInstance) {
+		return s_WindowInstance->WinProc(hWnd, msg, wParam, lParam);
 	}
 	return DefWindowProcW(hWnd, msg, wParam, lParam);
 }

@@ -16,7 +16,7 @@ App::~App() {
 int App::Run() {
 	int messageCode = 0xF0D45E;
 	while (messageCode == 0xF0D45E) {
-		messageCode = Window::Get().ProcessMessages();
+		messageCode = Window::Get()->ProcessMessages();
 
 		DoFrame();
 	}
