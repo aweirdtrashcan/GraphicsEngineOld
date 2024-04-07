@@ -4,7 +4,7 @@
 
 App::App() 
 	:
-	m_Window(800, 600),
+	m_Window(1600, 900),
 	m_Graphics(m_Window.GetWindowWidth(), m_Window.GetWindowHeight())
 {
 	m_Triangle = std::make_unique<Triangle>();

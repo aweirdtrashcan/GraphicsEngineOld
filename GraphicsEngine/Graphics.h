@@ -34,8 +34,15 @@ private:
 	static Graphics* GetGraphics() { return s_GraphicsInstance; }
 
 	ComPtr<IDXGISwapChain3> CreateSwapchain(UINT width, UINT height);
-	std::vector<ComPtr<ID3D12Resource>> GetSwapchainBuffers(ComPtr<IDXGISwapChain3> swapchain, UINT numBuffers) const;
-	void CreateDepthDescriptor(ComPtr<ID3D12Resource> depthBuffer, ComPtr<ID3D12DescriptorHeap>& outDescriptorHeap);
+	std::vector<ComPtr<ID3D12Resource>> GetSwapchainBuffers(IDXGISwapChain3* swapchain, 
+															ComPtr<ID3D12DescriptorHeap>& descriptorHeap, UINT numBuffers,
+															UINT& descriptorIncrement) const;
+	std::vector<ComPtr<ID3D12Resource>> CreateMultiSampleRenderTargets(UINT width, UINT height, ComPtr<ID3D12DescriptorHeap>& descriptorHeap) const;
+	
+	void CreateDepthDescriptor(ComPtr<ID3D12Resource> depthBuffer, ComPtr<ID3D12DescriptorHeap>& outDescriptorHeap, DXGI_SAMPLE_DESC sample);
+
+	void Barrier(ComPtr<ID3D12Resource>& res, D3D12_RESOURCE_STATES before, D3D12_RESOURCE_STATES after);
+	void SetRenderTarget(UINT numFrame, ComPtr<ID3D12DescriptorHeap> rtv, ComPtr<ID3D12DescriptorHeap> dsv);
 
 	void PrepareImGuiFrame();
 	void RenderImGuiFrame();
@@ -53,19 +60,27 @@ private:
 	ComPtr<IDXGIFactory1> m_Factory;
 	ComPtr<ID3D12Device1> m_Device;
 	ComPtr<IDXGISwapChain3> m_Swapchain;
+
 	ComPtr<ID3D12DescriptorHeap> m_RTVHeap;
-	ComPtr<ID3D12Resource> m_BackBuffers[s_BufferCount];
+	std::vector<ComPtr<ID3D12Resource>> m_BackBuffers;
+	ComPtr<ID3D12DescriptorHeap> m_RTVMSHeap;
+	std::vector<ComPtr<ID3D12Resource>> m_MSBackBuffers;
 	UINT m_RTVIncrementSize;
+	
+	D3D12_CLEAR_VALUE m_RenderTargetClearValue{};
+
 	ComPtr<ID3D12CommandAllocator> m_DirectCommandAllocator;
 	ComPtr<ID3D12GraphicsCommandList> m_DirectCommandList;
 	ComPtr<ID3D12CommandQueue> m_DirectCommandQueue;
 	ComPtr<ID3D12CommandQueue> m_CopyCommandQueue;
+	
 	Fence m_GraphicsFence;
 	Fence m_CopyFence;
-	HANDLE m_FenceEvent;
+	
 	D3D12_VIEWPORT m_Viewport{};
 	D3D12_RECT m_Scissor{};
 	UINT m_BackBufferIndex = 0;
+	DXGI_SAMPLE_DESC m_SampleDesc{};
 
 	ComPtr<ID3D12Resource> m_DepthBuffer;
 	ComPtr<ID3D12DescriptorHeap> m_DepthDescriptorHeap;

@@ -102,7 +102,7 @@ public:
 	static ComPtr<ID3D12Resource> CreateGenericBuffer(const void* data,
 													  SIZE_T bufferSize, SIZE_T stride, bool bIndex = false);
 	static ComPtr<ID3D12Resource> CreateGenericBuffer(SIZE_T bufferSize);
-	static ComPtr<ID3D12Resource> CreateDepthBuffer(UINT width, UINT height, DXGI_FORMAT depthFormat);
+	static ComPtr<ID3D12Resource> CreateDepthBuffer(UINT width, UINT height, DXGI_FORMAT depthFormat, DXGI_SAMPLE_DESC sampleDesc);
 	
 	static ComPtr<ID3D12PipelineState> CreatePipelineState(const D3D12_GRAPHICS_PIPELINE_STATE_DESC& desc) {
 		ComPtr<ID3D12PipelineState> state;
@@ -150,6 +150,29 @@ public:
 		HR_THROW_FAILED(Graphics::GetGraphics()->m_Device->CreateDescriptorHeap(&desc, IID_PPV_ARGS(&dHeap)));
 
 		return dHeap;
+	}
+
+	static ComPtr<ID3D12Resource> CreateRenderTargetTexture(UINT width, UINT height, DXGI_FORMAT format, 
+															DXGI_SAMPLE_DESC sampleDesc, const D3D12_CLEAR_VALUE& clearVal);
+
+	static DXGI_SAMPLE_DESC QuerySampleDesc(DXGI_FORMAT format) {
+		D3D12_FEATURE_DATA_MULTISAMPLE_QUALITY_LEVELS msQuality;
+		msQuality.Flags = D3D12_MULTISAMPLE_QUALITY_LEVELS_FLAG_NONE;
+		msQuality.Format = format;
+		msQuality.SampleCount = 4;
+		msQuality.NumQualityLevels = 0;
+
+		HR_THROW_FAILED(gfx().m_Device->CheckFeatureSupport(
+			D3D12_FEATURE_MULTISAMPLE_QUALITY_LEVELS,
+			&msQuality,
+			sizeof(msQuality)
+		));
+
+		DXGI_SAMPLE_DESC sd;
+		sd.Count = msQuality.SampleCount;
+		sd.Quality = msQuality.NumQualityLevels;
+
+		return sd;
 	}
 
 private:

@@ -177,7 +177,7 @@ ComPtr<ID3D12Resource> GraphicsFabric::CreateGenericBuffer(SIZE_T bufferSize) {
     return buffer;
 }
 
-ComPtr<ID3D12Resource> GraphicsFabric::CreateDepthBuffer(UINT width, UINT height, DXGI_FORMAT depthFormat) {
+ComPtr<ID3D12Resource> GraphicsFabric::CreateDepthBuffer(UINT width, UINT height, DXGI_FORMAT depthFormat, DXGI_SAMPLE_DESC sampleDesc) {
     ComPtr<ID3D12Resource> buffer;
 
     ComPtr<ID3D12CommandAllocator> copyCommandAllocator = GraphicsFabric::CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT);
@@ -193,7 +193,7 @@ ComPtr<ID3D12Resource> GraphicsFabric::CreateDepthBuffer(UINT width, UINT height
     HR_THROW_FAILED(gfx().m_Device->CreateCommittedResource(
         &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
         D3D12_HEAP_FLAG_NONE,
-        &CD3DX12_RESOURCE_DESC::Tex2D(depthFormat, width, height, 1, 0, 1, 0, D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL),
+        &CD3DX12_RESOURCE_DESC::Tex2D(depthFormat, width, height, 1, sampleDesc.Count > 1, sampleDesc.Count, sampleDesc.Quality - 1, D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL),
         D3D12_RESOURCE_STATE_COMMON,
         &clearVal,
         IID_PPV_ARGS(&buffer)
@@ -208,6 +208,39 @@ ComPtr<ID3D12Resource> GraphicsFabric::CreateDepthBuffer(UINT width, UINT height
     )));
 
     HR_THROW_FAILED(cmdList->Close());
+
+    ComPtr<ID3D12Fence> fence = GraphicsFabric::CreateFence();
+    UINT64 v = 0;
+    GFX_THROW_FAILED(queue->ExecuteCommandLists(1, (ID3D12CommandList* const*)cmdList.GetAddressOf()));
+    SignalFence(queue, fence, v);
+    WaitForFence(fence, v);
+
+    return buffer;
+}
+
+ComPtr<ID3D12Resource> GraphicsFabric::CreateRenderTargetTexture(UINT width, UINT height, DXGI_FORMAT format, 
+                                                                 DXGI_SAMPLE_DESC sampleDesc, const D3D12_CLEAR_VALUE& clearVal) {
+    ComPtr<ID3D12Resource> buffer;
+
+    ComPtr<ID3D12CommandAllocator> copyCommandAllocator = GraphicsFabric::CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT);
+    ComPtr<ID3D12GraphicsCommandList> cmdList = GraphicsFabric::CreateCommandList(D3D12_COMMAND_LIST_TYPE_DIRECT, copyCommandAllocator);
+    HR_THROW_FAILED(copyCommandAllocator->Reset());
+    HR_THROW_FAILED(cmdList->Reset(copyCommandAllocator.Get(), nullptr));
+
+    HR_THROW_FAILED(gfx().m_Device->CreateCommittedResource(
+        &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
+        D3D12_HEAP_FLAG_NONE,
+        &CD3DX12_RESOURCE_DESC::Tex2D(format, width, height, 1, 1, sampleDesc.Count, sampleDesc.Quality - 1, D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET),
+        D3D12_RESOURCE_STATE_COMMON,
+        &clearVal,
+        IID_PPV_ARGS(&buffer)
+    ));
+
+
+
+    HR_THROW_FAILED(cmdList->Close());
+
+    ComPtr<ID3D12CommandQueue> queue = GraphicsFabric::CreateCommandQueue(D3D12_COMMAND_LIST_TYPE_DIRECT);
 
     ComPtr<ID3D12Fence> fence = GraphicsFabric::CreateFence();
     UINT64 v = 0;

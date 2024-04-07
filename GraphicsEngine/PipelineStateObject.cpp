@@ -39,7 +39,7 @@ PipelineStateObject::PipelineStateObject(const RootSignature& rootSignature, con
 	desc.InputLayout.NumElements = static_cast<UINT>(elements.size());
 	desc.InputLayout.pInputElementDescs = elements.data();
 	desc.RTVFormats[0] = Graphics::s_BackBufferFormat;
-	desc.SampleDesc.Count = 1;
+	desc.SampleDesc.Count = 4;
 	desc.SampleDesc.Quality = 0;
 
 	m_PipelineState = GraphicsFabric::CreatePipelineState(desc);
