@@ -7,8 +7,9 @@
 #define HR_THROW_FAILED(hrcall) { HRESULT hr = (hrcall); if (FAILED(hr)) { throw HrException(__LINE__, __FILEW__, hr, GraphicsDebug::GetErrors()); } }
 #define IMG_EXCEPTION(reason) { throw Texture::TextureImage::TextureImageLoadException(__LINE__, __FILEW__, reason); }
 #else
-#define STIMPLY_EXCEPTION(reason)
+#define STIMPLY_EXCEPTION(reason) {}
 #define GRAPHICS_EXCEPTION(reason)
-#define GFX_THROW_FAILED(hrcall) hrcall
+#define GFX_THROW_FAILED(call) call
+#define HR_THROW_FAILED(call) call
 #define IMG_EXCEPTION(reason)
 #endif

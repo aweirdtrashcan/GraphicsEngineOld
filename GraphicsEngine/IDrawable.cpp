@@ -28,7 +28,9 @@ void IDrawable::PrepareToDraw() noexcept(!IS_DEBUG) {
 }
 
 void IDrawable::AddBind(std::shared_ptr<IBindable> bind) noexcept(!IS_DEBUG) {
+#if IS_DEBUG
 	if (bind == nullptr) throw std::exception("Trying to bind a null pointer");
+#endif
 	if (IndexBuffer* ib = dynamic_cast<IndexBuffer*>(bind.get())) {
 		m_IndicesCount = ib->GetIndicesCount();
 	}
