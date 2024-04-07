@@ -38,7 +38,7 @@ PipelineStateObject::PipelineStateObject(const RootSignature& rootSignature, con
 	desc.NumRenderTargets = 1;
 	desc.InputLayout.NumElements = static_cast<UINT>(elements.size());
 	desc.InputLayout.pInputElementDescs = elements.data();
-	desc.RTVFormats[0] = DXGI_FORMAT_B8G8R8A8_UNORM;
+	desc.RTVFormats[0] = Graphics::s_BackBufferFormat;
 	desc.SampleDesc.Count = 1;
 	desc.SampleDesc.Quality = 0;
 
