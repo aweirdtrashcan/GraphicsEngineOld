@@ -193,7 +193,7 @@ ComPtr<ID3D12Resource> GraphicsFabric::CreateDepthBuffer(UINT width, UINT height
     HR_THROW_FAILED(gfx().m_Device->CreateCommittedResource(
         &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
         D3D12_HEAP_FLAG_NONE,
-        &CD3DX12_RESOURCE_DESC::Tex2D(depthFormat, width, height, 1, sampleDesc.Count > 1, sampleDesc.Count, sampleDesc.Quality - 1, D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL),
+        &CD3DX12_RESOURCE_DESC::Tex2D(depthFormat, width, height, 1, sampleDesc.Count > 1, sampleDesc.Count, sampleDesc.Quality, D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL),
         D3D12_RESOURCE_STATE_COMMON,
         &clearVal,
         IID_PPV_ARGS(&buffer)
@@ -230,13 +230,11 @@ ComPtr<ID3D12Resource> GraphicsFabric::CreateRenderTargetTexture(UINT width, UIN
     HR_THROW_FAILED(gfx().m_Device->CreateCommittedResource(
         &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
         D3D12_HEAP_FLAG_NONE,
-        &CD3DX12_RESOURCE_DESC::Tex2D(format, width, height, 1, 1, sampleDesc.Count, sampleDesc.Quality - 1, D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET),
+        &CD3DX12_RESOURCE_DESC::Tex2D(format, width, height, 1, 1, sampleDesc.Count, sampleDesc.Quality, D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET),
         D3D12_RESOURCE_STATE_COMMON,
         &clearVal,
         IID_PPV_ARGS(&buffer)
     ));
-
-
 
     HR_THROW_FAILED(cmdList->Close());
 

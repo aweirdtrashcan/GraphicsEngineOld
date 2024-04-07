@@ -29,6 +29,8 @@ public:
 	void WaitDeviceIdle();
 	void ShowImGui();
 
+	static DXGI_SAMPLE_DESC GetSampleDesc() { return s_SampleDesc; }
+
 private:
 	// Function for GaphicsFabric
 	static Graphics* GetGraphics() { return s_GraphicsInstance; }
@@ -80,7 +82,7 @@ private:
 	D3D12_VIEWPORT m_Viewport{};
 	D3D12_RECT m_Scissor{};
 	UINT m_BackBufferIndex = 0;
-	DXGI_SAMPLE_DESC m_SampleDesc{};
+	static inline DXGI_SAMPLE_DESC s_SampleDesc{};
 
 	ComPtr<ID3D12Resource> m_DepthBuffer;
 	ComPtr<ID3D12DescriptorHeap> m_DepthDescriptorHeap;

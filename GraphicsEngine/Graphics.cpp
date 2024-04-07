@@ -46,7 +46,7 @@ Graphics::Graphics(UINT width, UINT height)
 	m_GraphicsFence = GraphicsFabric::CreateFence();
 	m_CopyFence = GraphicsFabric::CreateFence();
 	
-	m_SampleDesc = GraphicsFabric::QuerySampleDesc(s_BackBufferFormat);
+	s_SampleDesc = GraphicsFabric::QuerySampleDesc(s_BackBufferFormat);
 
 	m_RenderTargetClearValue.Color[0] = 0.3f;
 	m_RenderTargetClearValue.Color[1] = 0.3f;
@@ -151,6 +151,7 @@ void Graphics::ExecuteCommandLists(ID3D12CommandList** commandLists, UINT numCom
 
 	SetRenderTarget(m_BackBufferIndex, m_RTVHeap, m_DepthDescriptorHeap);
 
+	// Render ImGui UI before the barrier RTVState -> Present State
 	RenderImGuiFrame();
 
 	Barrier(m_BackBuffers[m_BackBufferIndex], D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
@@ -242,7 +243,7 @@ std::vector<ComPtr<ID3D12Resource>> Graphics::CreateMultiSampleRenderTargets(UIN
 	for (UINT i = 0; i < m_BackBuffers.size(); i++) {
 		buffers[i] = GraphicsFabric::CreateRenderTargetTexture(
 			width, height,
-			s_BackBufferFormat, m_SampleDesc,
+			s_BackBufferFormat, s_SampleDesc,
 			m_RenderTargetClearValue
 		);
 
@@ -267,7 +268,7 @@ void Graphics::CreateDepthDescriptor(ComPtr<ID3D12Resource> depthBuffer, ComPtr<
 
 	D3D12_DSV_DIMENSION dimension = D3D12_DSV_DIMENSION_TEXTURE2D;
 
-	if (sample.Count > 1 && sample.Quality > 0) {
+	if (sample.Count > 1) {
 		dimension = D3D12_DSV_DIMENSION_TEXTURE2DMS;
 	}
 
