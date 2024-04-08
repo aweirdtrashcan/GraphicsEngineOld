@@ -159,7 +159,7 @@ public:
 		D3D12_FEATURE_DATA_MULTISAMPLE_QUALITY_LEVELS msQuality;
 		msQuality.Flags = D3D12_MULTISAMPLE_QUALITY_LEVELS_FLAG_NONE;
 		msQuality.Format = format;
-		msQuality.SampleCount = 8;
+		msQuality.SampleCount = 2;
 		msQuality.NumQualityLevels = 0;
 
 		HR_THROW_FAILED(gfx().m_Device->CheckFeatureSupport(

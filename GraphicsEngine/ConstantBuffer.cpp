@@ -3,7 +3,9 @@
 #include "GraphicsFabric.h"
 #include "HeapArena.h"
 
-ConstantBuffer::ConstantBuffer(UINT64 structSize, UINT numStructs) : m_Stride(structSize) {
+ConstantBuffer::ConstantBuffer(UINT64 structSize, UINT numStructs) 
+	: 
+	m_Stride(GraphicsFabric::CalculateConstantBufferSize(structSize)) {
 	UINT64 cbSize = GraphicsFabric::CalculateConstantBufferSize(structSize) * numStructs;
 
 	m_GpuBuffer = GraphicsFabric::CreateUploadBuffer(nullptr, cbSize);

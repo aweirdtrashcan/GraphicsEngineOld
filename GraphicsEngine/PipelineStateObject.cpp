@@ -5,8 +5,9 @@
 #include "BindableCodex.h"
 
 #include <sstream>
+#include <cassert>
 
-PipelineStateObject::PipelineStateObject(const RootSignature& rootSignature, const std::vector<D3D12_INPUT_ELEMENT_DESC>& elements,
+PipelineStateObject::PipelineStateObject(ComPtr<ID3D12RootSignature> rootSignature, const std::vector<D3D12_INPUT_ELEMENT_DESC>& elements,
 										 const std::vector<Shader>& shaders) {
 
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC desc = {};
@@ -27,7 +28,7 @@ PipelineStateObject::PipelineStateObject(const RootSignature& rootSignature, con
 		}
 	}
 
-	desc.pRootSignature = rootSignature.m_RootSignature.Get();
+	desc.pRootSignature = rootSignature.Get();
 	desc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
 	desc.SampleMask = UINT_MAX;
 	desc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
@@ -42,30 +43,81 @@ PipelineStateObject::PipelineStateObject(const RootSignature& rootSignature, con
 	desc.SampleDesc = Graphics::GetSampleDesc();
 
 	m_PipelineState = GraphicsFabric::CreatePipelineState(desc);
+	m_RootSignature = rootSignature;
 }
 
 void PipelineStateObject::Bind(ID3D12GraphicsCommandList* cmdList) noexcept {
 	cmdList->SetPipelineState(m_PipelineState.Get());
+	cmdList->SetGraphicsRootSignature(m_RootSignature.Get());
 }
 
-std::shared_ptr<PipelineStateObject> PipelineStateObject::Resolve(const RootSignature& rootSignature, const std::vector<D3D12_INPUT_ELEMENT_DESC>& elements, const std::vector<Shader>& shaders) {
-	return BindableCodex::Resolve<PipelineStateObject>(rootSignature, elements, shaders);
+std::shared_ptr<PipelineStateObject> PipelineStateObject::Resolve(PipelineStateObject::Option option) {
+	if (m_PipelineCaches.empty()) {
+		BuildAllPipelineStates();
+	}
+	return m_PipelineCaches[option];
 }
 
-std::string PipelineStateObject::GenerateKey(const RootSignature& rootSignature, const std::vector<D3D12_INPUT_ELEMENT_DESC>& elements, const std::vector<Shader>& shaders, std::string key) {
-	std::stringstream oss;
+void PipelineStateObject::BuildAllPipelineStates() {
+	std::vector<Shader> shaders;
+	shaders.push_back({ L"Shaders/VertexShader.cso", Shader::Type::VertexShader });
+	shaders.push_back({ L"Shaders/PixelShader.cso", Shader::Type::PixelShader });
 
-	oss << rootSignature.Serialize();
+	std::vector<D3D12_INPUT_ELEMENT_DESC> ied = {
+		{ "Position", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+		{ "Color", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+	};
 
-	for (const D3D12_INPUT_ELEMENT_DESC& elem : elements) {
-		oss << elem.SemanticName;
-	}
+	Build_EMPTY_ROOT_SIG_PS__COLOR_VS__POS_COLOR(ied, shaders);
 
-	for (const Shader& shader : shaders) {
-		oss << (UINT)shader.GetType();
-	}
+	shaders[0] = Shader(L"Shaders/VertexShaderMVP.cso", Shader::Type::VertexShader);
 
-	oss << key;
+	Build_MVP_DESCRIPTOR_TABLE_PS__COLOR_VS__POS_COLOR(ied, shaders);
+}
 
-	return oss.str();
+void PipelineStateObject::Build_EMPTY_ROOT_SIG_PS__COLOR_VS__POS_COLOR(const std::vector<D3D12_INPUT_ELEMENT_DESC>& ied,
+																	   const std::vector<Shader>& shaders) {
+	std::shared_ptr<PipelineStateObject>& op = m_PipelineCaches[Option::EMPTY_ROOT_SIG_PS__COLOR_VS__POS_COLOR];
+	assert(op == nullptr);
+
+	D3D12_ROOT_SIGNATURE_DESC rootDesc{};
+	rootDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT |
+		D3D12_ROOT_SIGNATURE_FLAG_DENY_HULL_SHADER_ROOT_ACCESS |
+		D3D12_ROOT_SIGNATURE_FLAG_DENY_DOMAIN_SHADER_ROOT_ACCESS |
+		D3D12_ROOT_SIGNATURE_FLAG_DENY_GEOMETRY_SHADER_ROOT_ACCESS |
+		D3D12_ROOT_SIGNATURE_FLAG_DENY_PIXEL_SHADER_ROOT_ACCESS;
+
+	ComPtr<ID3D12RootSignature> rootSignature = GraphicsFabric::CreateRootSignature(rootDesc);
+
+	op = std::make_shared<PipelineStateObject>(rootSignature, ied, shaders);
+}
+
+void PipelineStateObject::Build_MVP_DESCRIPTOR_TABLE_PS__COLOR_VS__POS_COLOR(const std::vector<D3D12_INPUT_ELEMENT_DESC>& ied, 
+																			 const std::vector<Shader>& shaders) {
+	std::shared_ptr<PipelineStateObject>& op = m_PipelineCaches[Option::MVP_DESCRIPTOR_TABLE_PS__COLOR_VS__POS_COLOR];
+	assert(op == nullptr);
+
+	D3D12_ROOT_SIGNATURE_DESC rootDesc{};
+	rootDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT |
+		D3D12_ROOT_SIGNATURE_FLAG_DENY_HULL_SHADER_ROOT_ACCESS |
+		D3D12_ROOT_SIGNATURE_FLAG_DENY_DOMAIN_SHADER_ROOT_ACCESS |
+		D3D12_ROOT_SIGNATURE_FLAG_DENY_GEOMETRY_SHADER_ROOT_ACCESS |
+		D3D12_ROOT_SIGNATURE_FLAG_DENY_PIXEL_SHADER_ROOT_ACCESS;
+
+	D3D12_DESCRIPTOR_RANGE range{};
+	range.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_CBV;
+	range.NumDescriptors = 1;
+
+	D3D12_ROOT_PARAMETER param{};
+	param.DescriptorTable.NumDescriptorRanges = 1;
+	param.DescriptorTable.pDescriptorRanges = &range;
+	param.ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
+	param.ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+
+	rootDesc.NumParameters = 1;
+	rootDesc.pParameters = &param;
+
+	ComPtr<ID3D12RootSignature> rootSignature = GraphicsFabric::CreateRootSignature(rootDesc);
+
+	op = std::make_shared<PipelineStateObject>(rootSignature, ied, shaders);
 }

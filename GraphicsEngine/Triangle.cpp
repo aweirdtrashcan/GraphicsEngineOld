@@ -8,6 +8,9 @@
 #include "RootSignature.h"
 #include "PipelineStateObject.h"
 #include "PrimitiveTopology.h"
+#include "ConstantBuffer.h"
+
+#include <DirectXMath.h>
 
 Triangle::Triangle() {
 	m_CommandAllocator = GraphicsFabric::CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_BUNDLE);
@@ -22,32 +25,26 @@ Triangle::Triangle() {
 		};
 	};
 
+	struct CBuf {
+		DirectX::XMFLOAT4X4 mvp;
+
+		CBuf() {
+			DirectX::XMMATRIX m = DirectX::XMMatrixIdentity();
+			DirectX::XMStoreFloat4x4(&mvp, m);
+		}
+	};
+
 	Vertex v[3] = {
 		{ -0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f },
 		{ 0.0f, 0.5f, 0.0f, 0.0f, 1.0f, 0.0f },
 		{ 0.5, -0.5f, 0.0f, 0.0f, 0.0f, 1.0f } 
 	};
 
-	std::shared_ptr<RootSignature> rootSig = std::make_shared<RootSignature>();
+	//AddBind(std::make_shared<ConstantBuffer>(sizeof(CBuf), 2));
 
-	std::vector<D3D12_INPUT_ELEMENT_DESC> ied = {
-		{ "Position", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-		{ "Color", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-	};
+	AddBind(PipelineStateObject::Resolve(PipelineStateObject::Option::MVP_DESCRIPTOR_TABLE_PS__COLOR_VS__POS_COLOR));
 
-	std::vector<Shader> shaders;
-	shaders.push_back({ L"Shaders/VertexShader.cso", Shader::Type::VertexShader });
-	shaders.push_back({ L"Shaders/PixelShader.cso", Shader::Type::PixelShader });
-
-	std::shared_ptr<PipelineStateObject> pipeline = PipelineStateObject::Resolve(
-		*rootSig.get(),
-		ied,
-		shaders
-	);
-
-	AddBind(std::move(pipeline));
 	AddBind(PrimitiveTopology::Resolve(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST));
-	AddBind(std::move(rootSig));
 
 	std::shared_ptr<VertexBuffer> vBuffer = VertexBuffer::Resolve(
 		m_CommandList, 
