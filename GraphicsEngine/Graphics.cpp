@@ -106,7 +106,7 @@ Graphics::Graphics(UINT width, UINT height)
 	if (FAILED(s)) {
 		GRAPHICS_EXCEPTION(L"Failed to create a D3D12 device");
 	} else {
-		printf("Device created successfully with feature level %s\n!", FeatureLevelToString(featureLevel.MaxSupportedFeatureLevel));
+		printf("Device created successfully with feature level %s!\n", FeatureLevelToString(featureLevel.MaxSupportedFeatureLevel));
 	}
 
 	s_GraphicsInstance = this;
@@ -195,18 +195,7 @@ UINT Graphics::PrepareFrame() {
 	return m_BackBufferIndex;
 }
 
-void Graphics::ExecuteCommandLists(ID3D12CommandList** commandLists, UINT numCommandLists) {
-
-	for (UINT i = 0; i < numCommandLists; i++) {
-		ID3D12GraphicsCommandList* cmdList = static_cast<ID3D12GraphicsCommandList*>(commandLists[i]);
-#if IS_DEBUG
-	if (cmdList == nullptr) {
-		__debugbreak();
-	}
-#endif
-	HR_THROW_FAILED(cmdList->Close());
-	GFX_THROW_FAILED(m_DirectCommandList->ExecuteBundle(cmdList));
-	}
+void Graphics::ExecuteCommandLists() {
 
 	Barrier(m_MSBackBuffers[m_BackBufferIndex], D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_RESOLVE_SOURCE);
 	Barrier(m_BackBuffers[m_BackBufferIndex], D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_RESOLVE_DEST);
@@ -368,12 +357,9 @@ void Graphics::PrepareImGuiFrame() {
 	ImGui_ImplDX12_NewFrame();
 	ImGui_ImplWin32_NewFrame();
 	ImGui::NewFrame();
-
-	GFX_THROW_FAILED(m_DirectCommandList->SetDescriptorHeaps(1, m_SrvDescHeap.GetAddressOf()));
 }
 
 void Graphics::RenderImGuiFrame() {	
-
 	if (ImGui::Begin("Status")) {
 		ImGuiIO& io = ImGui::GetIO();
 
@@ -388,6 +374,8 @@ void Graphics::RenderImGuiFrame() {
 	ImGui::End();
 
 	ImGui::Render();
+	
+	GFX_THROW_FAILED(m_DirectCommandList->SetDescriptorHeaps(1, m_SrvDescHeap.GetAddressOf()));
 
 	ImDrawData* drawData = ImGui::GetDrawData();
 	ImGui_ImplDX12_RenderDrawData(drawData, m_DirectCommandList.Get());

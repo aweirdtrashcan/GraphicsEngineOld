@@ -23,10 +23,11 @@ public:
 	Graphics(const Graphics&) = delete;
 	~Graphics();
 
-	void ExecuteCommandLists(ID3D12CommandList** commandLists, UINT numCommandLists);
+	void ExecuteCommandLists();
 	void Present();
 	UINT PrepareFrame();
 	void WaitDeviceIdle();
+	ID3D12GraphicsCommandList* GetCommandList() const { return m_DirectCommandList.Get(); }
 
 	static DXGI_SAMPLE_DESC GetSampleDesc() { return s_SampleDesc; }
 

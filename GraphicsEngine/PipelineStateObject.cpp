@@ -46,7 +46,7 @@ PipelineStateObject::PipelineStateObject(ComPtr<ID3D12RootSignature> rootSignatu
 	m_RootSignature = rootSignature;
 }
 
-void PipelineStateObject::Bind(ID3D12GraphicsCommandList* cmdList) noexcept {
+void PipelineStateObject::Bind(ID3D12GraphicsCommandList* cmdList) noexcept(!IS_DEBUG) {
 	cmdList->SetPipelineState(m_PipelineState.Get());
 	cmdList->SetGraphicsRootSignature(m_RootSignature.Get());
 }

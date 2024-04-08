@@ -7,7 +7,7 @@
 class IndexBuffer : public IBindable {
 public:
 	IndexBuffer(ComPtr<ID3D12GraphicsCommandList> commandList, const void* indices, SIZE_T indicesCount, SIZE_T stride, std::string tag);
-	virtual void Bind(ID3D12GraphicsCommandList* cmdList) noexcept override;
+	virtual void Bind(ID3D12GraphicsCommandList* cmdList) noexcept(!IS_DEBUG) override;
 	
 	static std::shared_ptr<IndexBuffer> Resolve(ComPtr<ID3D12GraphicsCommandList> commandList, const void* indices,
 												SIZE_T indicesCount, SIZE_T stride, std::string tag);

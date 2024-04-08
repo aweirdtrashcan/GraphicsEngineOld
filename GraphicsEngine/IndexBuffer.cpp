@@ -12,7 +12,7 @@ IndexBuffer::IndexBuffer(ComPtr<ID3D12GraphicsCommandList> commandList, const vo
 	m_Buffer = GraphicsFabric::CreateIndexBuffer(indices, m_IndicesCount, stride, m_View);
 }
 
-void IndexBuffer::Bind(ID3D12GraphicsCommandList* cmdList) noexcept {
+void IndexBuffer::Bind(ID3D12GraphicsCommandList* cmdList) noexcept(!IS_DEBUG) {
 	cmdList->IASetIndexBuffer(&m_View);
 }
 

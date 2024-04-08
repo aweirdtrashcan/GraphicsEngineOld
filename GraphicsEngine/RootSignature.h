@@ -8,7 +8,7 @@ class RootSignature : public IBindable {
 public:
 	RootSignature(const RootParam& param);
 	RootSignature();
-	virtual void Bind(ID3D12GraphicsCommandList* cmdList) noexcept override;
+	virtual void Bind(ID3D12GraphicsCommandList* cmdList) noexcept(!IS_DEBUG) override;
 
 	static std::shared_ptr<RootSignature> Resolve(const RootParam& param);
 	static std::shared_ptr<RootSignature> Resolve();

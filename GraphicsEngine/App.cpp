@@ -28,7 +28,7 @@ int App::Run() {
 
 void App::DoFrame() {
 	UINT frameNum = m_Graphics.PrepareFrame();
-	ID3D12CommandList* cmd = m_Triangle->RecordDrawCommands(frameNum);
-	m_Graphics.ExecuteCommandLists(&cmd, 1);
+	m_Triangle->RecordDrawCommands(frameNum, m_Graphics.GetCommandList());
+	m_Graphics.ExecuteCommandLists();
 	m_Graphics.Present();
 }

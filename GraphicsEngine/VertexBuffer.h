@@ -7,7 +7,7 @@
 class VertexBuffer : public IBindable {
 public:
 	VertexBuffer(ComPtr<ID3D12GraphicsCommandList> commandList, const void* vertices, SIZE_T vertexCount, SIZE_T stride, std::string key);
-	virtual void Bind(ID3D12GraphicsCommandList* cmdList) noexcept override;
+	virtual void Bind(ID3D12GraphicsCommandList* cmdList) noexcept(!IS_DEBUG) override;
 
 	static std::shared_ptr<VertexBuffer> Resolve(ComPtr<ID3D12GraphicsCommandList> commandList, const void* vertices, 
 												 SIZE_T vertexCount, SIZE_T stride, std::string key);

@@ -40,9 +40,12 @@ Triangle::Triangle() {
 		{ 0.5, -0.5f, 0.0f, 0.0f, 0.0f, 1.0f } 
 	};
 
-	//AddBind(std::make_shared<ConstantBuffer>(sizeof(CBuf), 2));
-
 	AddBind(PipelineStateObject::Resolve(PipelineStateObject::Option::MVP_DESCRIPTOR_TABLE_PS__COLOR_VS__POS_COLOR));
+
+	auto cb = std::make_shared<ConstantBuffer>(sizeof(CBuf), 2);
+	CBuf cbcpu{};
+	cb->Update(&cbcpu, sizeof(cbcpu), 0);
+	AddBind(cb);
 
 	AddBind(PrimitiveTopology::Resolve(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST));
 

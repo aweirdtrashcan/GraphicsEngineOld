@@ -14,7 +14,7 @@ Texture::Texture(std::string_view texturePath) {
 	GraphicsFabric::CreateTextureImage(&image);
 }
 
-void Texture::Bind(ID3D12GraphicsCommandList* cmdList) noexcept {
+void Texture::Bind(ID3D12GraphicsCommandList* cmdList) noexcept(!IS_DEBUG) {
 	
 }
 

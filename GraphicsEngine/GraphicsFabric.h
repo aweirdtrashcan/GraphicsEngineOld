@@ -191,6 +191,10 @@ public:
 		GFX_THROW_FAILED(gfx().m_Device->CreateConstantBufferView(&desc, cpuHandle));
 	}
 
+	static UINT GetDescriptorIncrement(D3D12_DESCRIPTOR_HEAP_TYPE type) {
+		return gfx().m_Device->GetDescriptorHandleIncrementSize(type);
+	}
+
 private:
 	__forceinline static Graphics& gfx() {
 		return *Graphics::GetGraphics();

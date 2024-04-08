@@ -10,7 +10,7 @@ VertexBuffer::VertexBuffer(ComPtr<ID3D12GraphicsCommandList> commandList, const 
 	m_Buffer = GraphicsFabric::CreateVertexBuffer(vertices, vertexCount, stride, m_View);
 }
 
-void VertexBuffer::Bind(ID3D12GraphicsCommandList* cmdList) noexcept {
+void VertexBuffer::Bind(ID3D12GraphicsCommandList* cmdList) noexcept(!IS_DEBUG) {
 	cmdList->IASetVertexBuffers(0, 1, &m_View);
 }
 
