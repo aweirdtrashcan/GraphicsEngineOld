@@ -200,11 +200,13 @@
     <ClInclude Include="Allocator.h" />
     <ClInclude Include="App.h" />
     <ClInclude Include="BindableCodex.h" />
+    <ClInclude Include="ConstantBuffer.h" />
     <ClInclude Include="FreeListAllocator.h" />
     <ClInclude Include="Graphics.h" />
     <ClInclude Include="GraphicsDebug.h" />
     <ClInclude Include="GraphicsException.h" />
     <ClInclude Include="GraphicsFabric.h" />
+    <ClInclude Include="HeapArena.h" />
     <ClInclude Include="HrException.h" />
     <ClInclude Include="IBindable.h" />
     <ClInclude Include="IDrawable.h" />
@@ -215,6 +217,7 @@
     <ClInclude Include="PixGpuCapturer.h" />
     <ClInclude Include="PrimitiveTopology.h" />
     <ClInclude Include="resource.h" />
+    <ClInclude Include="RootParams.h" />
     <ClInclude Include="RootSignature.h" />
     <ClInclude Include="SinglyLinkedList.h" />
     <ClInclude Include="SinglyLinkedListImpl.h" />
@@ -238,11 +241,13 @@
     <ClCompile Include="..\include\imgui\imgui_widgets.cpp" />
     <ClCompile Include="Allocator.cpp" />
     <ClCompile Include="App.cpp" />
+    <ClCompile Include="ConstantBuffer.cpp" />
     <ClCompile Include="FreeListAllocator.cpp" />
     <ClCompile Include="Graphics.cpp" />
     <ClCompile Include="GraphicsDebug.cpp" />
     <ClCompile Include="GraphicsException.cpp" />
     <ClCompile Include="GraphicsFabric.cpp" />
+    <ClCompile Include="HeapArena.cpp" />
     <ClCompile Include="HrException.cpp" />
     <ClCompile Include="IBindable.cpp" />
     <ClCompile Include="IDrawable.cpp" />

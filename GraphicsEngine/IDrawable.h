@@ -5,7 +5,7 @@
 
 class IDrawable {
 public:
-	ID3D12CommandList* RecordDrawCommands() const noexcept(!IS_DEBUG);
+	ID3D12CommandList* RecordDrawCommands(UINT frameNum) const noexcept(!IS_DEBUG);
 	void PrepareToDraw() noexcept(!IS_DEBUG);
 
 	void __Debug_SetCommandList(ID3D12GraphicsCommandList* cmdList) {

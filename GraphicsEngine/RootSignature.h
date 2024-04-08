@@ -2,11 +2,12 @@
 
 #include "IBindable.h"
 #include "ISerializable.h"
+#include "RootParams.h"
 
 class RootSignature : public IBindable, public ISerializable {
 	friend class PipelineStateObject;
 public:
-	RootSignature();
+	RootSignature(RootParam param);
 	virtual void Bind(ID3D12GraphicsCommandList* cmdList) noexcept override;
 
 private:

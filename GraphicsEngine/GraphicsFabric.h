@@ -178,6 +178,19 @@ public:
 		return sd;
 	}
 
+	static constexpr UINT64 CalculateConstantBufferSize(UINT64 size) {
+		return (size + 255) & ~255;
+	}
+
+	static void CreateConstantBufferView(D3D12_GPU_VIRTUAL_ADDRESS bufferLocation, UINT size,
+										 D3D12_CPU_DESCRIPTOR_HANDLE cpuHandle) {
+		D3D12_CONSTANT_BUFFER_VIEW_DESC desc = {};
+		desc.BufferLocation = bufferLocation;
+		desc.SizeInBytes = size;
+
+		GFX_THROW_FAILED(gfx().m_Device->CreateConstantBufferView(&desc, cpuHandle));
+	}
+
 private:
 	__forceinline static Graphics& gfx() {
 		return *Graphics::GetGraphics();
@@ -186,10 +199,15 @@ private:
 	GraphicsFabric() {
 		m_CommandAllocator = CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT);
 		m_CommandList = CreateCommandList(D3D12_COMMAND_LIST_TYPE_DIRECT, m_CommandAllocator.Get());
+		
+		m_ConstantBufferHeap = CreateDescriptorHeap(1000, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+		m_ConstantBufferUsage = 0;
 	}
 
 private:
 	std::unordered_map<D3D12_COMMAND_LIST_TYPE, ComPtr<ID3D12CommandQueue>> m_CommandQueue;
 	ComPtr<ID3D12GraphicsCommandList> m_CommandList;
 	ComPtr<ID3D12CommandAllocator> m_CommandAllocator;
+	ComPtr<ID3D12DescriptorHeap> m_ConstantBufferHeap;
+	UINT64 m_ConstantBufferUsage;
 };

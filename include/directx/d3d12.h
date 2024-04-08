@@ -4380,6 +4380,7 @@ typedef struct D3D12_CPU_DESCRIPTOR_HANDLE
     SIZE_T ptr;
     // modification i did myself to update the pointer.
     D3D12_CPU_DESCRIPTOR_HANDLE At(UINT index, UINT incrementSize) const { return { this->ptr + (index * incrementSize) }; }
+    D3D12_CPU_DESCRIPTOR_HANDLE(SIZE_T ptr) : ptr(ptr) {}
     } 	D3D12_CPU_DESCRIPTOR_HANDLE;
 
 typedef struct D3D12_GPU_DESCRIPTOR_HANDLE

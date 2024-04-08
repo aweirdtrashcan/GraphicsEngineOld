@@ -25,9 +25,8 @@ public:
 
 	void ExecuteCommandLists(ID3D12CommandList** commandLists, UINT numCommandLists);
 	void Present();
-	void PrepareFrame();
+	UINT PrepareFrame();
 	void WaitDeviceIdle();
-	void ShowImGui();
 
 	static DXGI_SAMPLE_DESC GetSampleDesc() { return s_SampleDesc; }
 

@@ -18,6 +18,29 @@ GraphicsDebug::GraphicsDebug() {
 	DXGIGetDebugInterface* func = (DXGIGetDebugInterface*)GetProcAddress(debug, "DXGIGetDebugInterface");
 	
 	func(IID_PPV_ARGS(&m_InfoQueue));
+
+
+	DXGI_INFO_QUEUE_MESSAGE_CATEGORY categories[] = {
+		DXGI_INFO_QUEUE_MESSAGE_CATEGORY_INITIALIZATION,
+		DXGI_INFO_QUEUE_MESSAGE_CATEGORY_EXECUTION,
+		DXGI_INFO_QUEUE_MESSAGE_CATEGORY_SHADER,
+		DXGI_INFO_QUEUE_MESSAGE_CATEGORY_CLEANUP
+	};
+	DXGI_INFO_QUEUE_MESSAGE_SEVERITY severities[] = {
+		DXGI_INFO_QUEUE_MESSAGE_SEVERITY_CORRUPTION,
+		DXGI_INFO_QUEUE_MESSAGE_SEVERITY_ERROR,
+		//DXGI_INFO_QUEUE_MESSAGE_SEVERITY_INFO, descomenta pra ver o spam que o ImGui produz =D
+		DXGI_INFO_QUEUE_MESSAGE_SEVERITY_MESSAGE,
+		DXGI_INFO_QUEUE_MESSAGE_SEVERITY_WARNING
+	};
+
+	DXGI_INFO_QUEUE_FILTER infoFilter{};
+	infoFilter.AllowList.pCategoryList = categories;
+	infoFilter.AllowList.NumCategories = _countof(categories);
+	infoFilter.AllowList.pSeverityList = severities;
+	infoFilter.AllowList.NumSeverities = _countof(severities);
+
+	m_InfoQueue->PushStorageFilter(DXGI_DEBUG_DX, &infoFilter);
 	
 	FreeModule(debug);
 }

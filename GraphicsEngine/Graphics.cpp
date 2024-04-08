@@ -17,6 +17,38 @@
 #pragma comment(lib, "d3d12.lib")
 #pragma comment(lib, "dxgi.lib")
 
+const char* FeatureLevelToString(D3D_FEATURE_LEVEL level) {
+
+	switch (level) {
+		case D3D_FEATURE_LEVEL_1_0_GENERIC:
+			return "1.0 generic";
+		case D3D_FEATURE_LEVEL_1_0_CORE:
+			return "1.0 core";
+		case D3D_FEATURE_LEVEL_9_1:
+			return "9.1";
+		case D3D_FEATURE_LEVEL_9_2:
+			return "9.2";
+		case D3D_FEATURE_LEVEL_9_3:
+			return "9.3";
+		case D3D_FEATURE_LEVEL_10_0:
+			return "10.0";
+		case D3D_FEATURE_LEVEL_10_1:
+			return "10.1";
+		case D3D_FEATURE_LEVEL_11_0:
+			return "11.0";
+		case D3D_FEATURE_LEVEL_11_1:
+			return "11.1";
+		case D3D_FEATURE_LEVEL_12_0:
+			return "12.0";
+		case D3D_FEATURE_LEVEL_12_1:
+			return "12.1";
+		case D3D_FEATURE_LEVEL_12_2:
+			return "12.2";
+	}
+
+	return "Unknown";
+}
+
 Graphics::Graphics(UINT width, UINT height) 
 	:
 	m_Width(width),
@@ -27,18 +59,58 @@ Graphics::Graphics(UINT width, UINT height)
 		debugController->EnableDebugLayer();
 	}
 
-	if (!SUCCEEDED(D3D12CreateDevice(
-		nullptr,
-		D3D_FEATURE_LEVEL_11_0,
-		IID_PPV_ARGS(&m_Device)
-	))) {
-		GRAPHICS_EXCEPTION(L"Failed to create d3d12 device");
+	HR_THROW_FAILED(CreateDXGIFactory2(DXGI_CREATE_FACTORY_DEBUG, IID_PPV_ARGS(&m_Factory)));
+	
+	ComPtr<IDXGIAdapter1> tempAdapter = nullptr;
+	ComPtr<IDXGIAdapter1> selectedAdapter = nullptr;
+
+#define HAS_DEVICE(i) m_Factory->EnumAdapters1(i, &tempAdapter) != DXGI_ERROR_NOT_FOUND
+
+	for (UINT i = 0; HAS_DEVICE(i); i++) {
+		HRESULT s = D3D12CreateDevice(tempAdapter.Get(), D3D_FEATURE_LEVEL_11_0, __uuidof(ID3D12Device), nullptr);
+		if (SUCCEEDED(s)) {
+			selectedAdapter = tempAdapter;
+		}
 	}
 
-	HR_THROW_FAILED(CreateDXGIFactory2(DXGI_CREATE_FACTORY_DEBUG, IID_PPV_ARGS(&m_Factory)));
+	if (selectedAdapter == nullptr) {
+		GRAPHICS_EXCEPTION(L"Failed to find a GPU capable of D3D12");
+	}
+
+	ComPtr<ID3D12Device> tempDevice = nullptr;
+
+	HRESULT s = D3D12CreateDevice(selectedAdapter.Get(), D3D_FEATURE_LEVEL_11_0, IID_PPV_ARGS(&tempDevice));
+	if (FAILED(s)) {
+		GRAPHICS_EXCEPTION(L"Failed to create a D3D12 device");
+	}
+
+	D3D_FEATURE_LEVEL requestedLevels[] = {
+		D3D_FEATURE_LEVEL_11_0,
+		D3D_FEATURE_LEVEL_11_1,
+		D3D_FEATURE_LEVEL_12_0,
+		D3D_FEATURE_LEVEL_12_1,
+		D3D_FEATURE_LEVEL_12_2
+	};
+
+	D3D12_FEATURE_DATA_FEATURE_LEVELS featureLevel{};
+	featureLevel.pFeatureLevelsRequested = requestedLevels;
+	featureLevel.NumFeatureLevels = _countof(requestedLevels);
+	
+	HR_THROW_FAILED(tempDevice->CheckFeatureSupport(
+		D3D12_FEATURE_FEATURE_LEVELS,
+		&featureLevel,
+		sizeof(featureLevel)
+	));
+
+	s = D3D12CreateDevice(selectedAdapter.Get(), featureLevel.MaxSupportedFeatureLevel, IID_PPV_ARGS(&m_Device));
+	if (FAILED(s)) {
+		GRAPHICS_EXCEPTION(L"Failed to create a D3D12 device");
+	} else {
+		printf("Device created successfully with feature level %s\n!", FeatureLevelToString(featureLevel.MaxSupportedFeatureLevel));
+	}
 
 	s_GraphicsInstance = this;
-	
+
 	m_DirectCommandAllocator = GraphicsFabric::CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT);
 	m_DirectCommandList = GraphicsFabric::CreateCommandList(D3D12_COMMAND_LIST_TYPE_DIRECT, m_DirectCommandAllocator);
 	m_DirectCommandQueue = GraphicsFabric::CreateCommandQueue(D3D12_COMMAND_LIST_TYPE_DIRECT);
@@ -91,7 +163,7 @@ Graphics::~Graphics() {
 	ImGui_ImplDX12_Shutdown();
 }
 
-void Graphics::PrepareFrame() {
+UINT Graphics::PrepareFrame() {
 	HR_THROW_FAILED(m_DirectCommandAllocator->Reset());
 	HR_THROW_FAILED(m_DirectCommandList->Reset(m_DirectCommandAllocator.Get(), nullptr));
 
@@ -119,6 +191,8 @@ void Graphics::PrepareFrame() {
 	GFX_THROW_FAILED(m_DirectCommandList->RSSetScissorRects(1u, &m_Scissor));
 
 	PrepareImGuiFrame();
+
+	return m_BackBufferIndex;
 }
 
 void Graphics::ExecuteCommandLists(ID3D12CommandList** commandLists, UINT numCommandLists) {
@@ -171,13 +245,6 @@ void Graphics::Present() {
 
 void Graphics::WaitDeviceIdle() {
 	GraphicsFabric::WaitForFence(m_GraphicsFence, m_GraphicsFence);
-}
-
-void Graphics::ShowImGui() {
-
-	static bool s_ShowDemoWindow = true;
-
-	ImGui::ShowDemoWindow(&s_ShowDemoWindow);
 }
 
 ComPtr<IDXGISwapChain3> Graphics::CreateSwapchain(UINT width, UINT height) {
@@ -306,6 +373,20 @@ void Graphics::PrepareImGuiFrame() {
 }
 
 void Graphics::RenderImGuiFrame() {	
+
+	if (ImGui::Begin("Status")) {
+		ImGuiIO& io = ImGui::GetIO();
+
+		float frameRate = io.Framerate;
+		float frameTime = frameRate / 1000.f;
+
+		ImGui::Text("FPS: %f", frameRate);
+		ImGui::Text("FrameTime: %f", frameTime);
+		ImGui::Text("MSAA %dX", s_SampleDesc.Count);
+	}
+
+	ImGui::End();
+
 	ImGui::Render();
 
 	ImDrawData* drawData = ImGui::GetDrawData();
