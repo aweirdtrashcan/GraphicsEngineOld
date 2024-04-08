@@ -6,13 +6,11 @@
 
 class IndexBuffer : public IBindable {
 public:
-	IndexBuffer(ComPtr<ID3D12GraphicsCommandList> commandList, const void* indices, SIZE_T indicesCount, SIZE_T stride, std::string tag);
-	virtual void Bind(ID3D12GraphicsCommandList* cmdList) noexcept(!IS_DEBUG) override;
+	IndexBuffer(const void* indices, SIZE_T indicesCount, SIZE_T stride, std::string tag);
+	virtual void Bind(ID3D12GraphicsCommandList* cmdList, UINT frameNumber) noexcept(!IS_DEBUG) override;
 	
-	static std::shared_ptr<IndexBuffer> Resolve(ComPtr<ID3D12GraphicsCommandList> commandList, const void* indices,
-												SIZE_T indicesCount, SIZE_T stride, std::string tag);
-	static std::string GenerateKey(ComPtr<ID3D12GraphicsCommandList> commandList, const void* indices,
-								   SIZE_T indicesCount, SIZE_T stride, std::string tag);
+	static std::shared_ptr<IndexBuffer> Resolve(const void* indices, SIZE_T indicesCount, SIZE_T stride, std::string tag);
+	static std::string GenerateKey(const void* indices, SIZE_T indicesCount, SIZE_T stride, std::string tag);
 
 	UINT GetIndicesCount() const { return m_IndicesCount; }
 

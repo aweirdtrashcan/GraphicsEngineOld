@@ -6,6 +6,11 @@
 class Graphics {
 	friend class GraphicsFabric;
 public:
+	struct FramePrepData {
+		UINT frameNumber = 0;
+		float deltaTime = 0.0f;
+	};
+public:
 	class Fence {
 	public:
 		Fence() : m_Fence(nullptr), m_Value(0) {}
@@ -25,11 +30,11 @@ public:
 
 	void ExecuteCommandLists();
 	void Present();
-	UINT PrepareFrame();
+	const FramePrepData& PrepareFrame();
 	void WaitDeviceIdle();
 	ID3D12GraphicsCommandList* GetCommandList() const { return m_DirectCommandList.Get(); }
-
 	static DXGI_SAMPLE_DESC GetSampleDesc() { return s_SampleDesc; }
+	static class ConstantBuffer* GetGlobalConstantBuffer() { return s_ConstantBuffer; }
 
 private:
 	// Function for GaphicsFabric
@@ -50,7 +55,7 @@ private:
 	void RenderImGuiFrame();
 
 public:
-	static inline constexpr UINT s_BufferCount = 2;
+	static inline constexpr UINT s_BufferCount = 3;
 	static inline const DXGI_FORMAT s_BackBufferFormat = DXGI_FORMAT_B8G8R8A8_UNORM;
 	static inline const DXGI_FORMAT s_DepthStencilFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
 
@@ -81,7 +86,7 @@ private:
 	
 	D3D12_VIEWPORT m_Viewport{};
 	D3D12_RECT m_Scissor{};
-	UINT m_BackBufferIndex = 0;
+	FramePrepData m_PrepData{};
 	static inline DXGI_SAMPLE_DESC s_SampleDesc{};
 
 	ComPtr<ID3D12Resource> m_DepthBuffer;
@@ -89,5 +94,12 @@ private:
 
 	// ImGuiHeap
 	ComPtr<ID3D12DescriptorHeap> m_SrvDescHeap;
+
+	static inline struct ConstantBufferGlobalData {
+		XMFLOAT4X4 view;
+		XMFLOAT4X4 projection;
+	} s_ConstantBufferData;
+
+	static inline class ConstantBuffer* s_ConstantBuffer;
 };
 

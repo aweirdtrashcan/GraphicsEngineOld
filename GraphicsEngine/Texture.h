@@ -37,7 +37,7 @@ public:
 	};
 public:
 	Texture(std::string_view texturePath);
-	virtual void Bind(ID3D12GraphicsCommandList* cmdList) noexcept(!IS_DEBUG) override;
+	virtual void Bind(ID3D12GraphicsCommandList* cmdList, UINT frameNumber) noexcept(!IS_DEBUG) override;
 
 };
 

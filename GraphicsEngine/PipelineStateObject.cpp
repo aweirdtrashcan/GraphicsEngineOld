@@ -46,7 +46,7 @@ PipelineStateObject::PipelineStateObject(ComPtr<ID3D12RootSignature> rootSignatu
 	m_RootSignature = rootSignature;
 }
 
-void PipelineStateObject::Bind(ID3D12GraphicsCommandList* cmdList) noexcept(!IS_DEBUG) {
+void PipelineStateObject::Bind(ID3D12GraphicsCommandList* cmdList, UINT frameNumber) noexcept(!IS_DEBUG) {
 	cmdList->SetPipelineState(m_PipelineState.Get());
 	cmdList->SetGraphicsRootSignature(m_RootSignature.Get());
 }
@@ -104,18 +104,27 @@ void PipelineStateObject::Build_MVP_DESCRIPTOR_TABLE_PS__COLOR_VS__POS_COLOR(con
 		D3D12_ROOT_SIGNATURE_FLAG_DENY_GEOMETRY_SHADER_ROOT_ACCESS |
 		D3D12_ROOT_SIGNATURE_FLAG_DENY_PIXEL_SHADER_ROOT_ACCESS;
 
-	D3D12_DESCRIPTOR_RANGE range{};
-	range.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_CBV;
-	range.NumDescriptors = 1;
+	D3D12_DESCRIPTOR_RANGE range[2]{};
+	range[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_CBV;
+	range[0].NumDescriptors = 1;
 
-	D3D12_ROOT_PARAMETER param{};
-	param.DescriptorTable.NumDescriptorRanges = 1;
-	param.DescriptorTable.pDescriptorRanges = &range;
-	param.ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
-	param.ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+	range[1].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_CBV;
+	range[1].NumDescriptors = 1;
+	range[1].BaseShaderRegister = 1;
 
-	rootDesc.NumParameters = 1;
-	rootDesc.pParameters = &param;
+	D3D12_ROOT_PARAMETER params[2]{};
+	params[0].DescriptorTable.NumDescriptorRanges = 1;
+	params[0].DescriptorTable.pDescriptorRanges = &range[0];
+	params[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
+	params[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+
+	params[1].DescriptorTable.NumDescriptorRanges = 1;
+	params[1].DescriptorTable.pDescriptorRanges = &range[1];
+	params[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
+	params[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+
+	rootDesc.NumParameters = _countof(params);
+	rootDesc.pParameters = params;
 
 	ComPtr<ID3D12RootSignature> rootSignature = GraphicsFabric::CreateRootSignature(rootDesc);
 

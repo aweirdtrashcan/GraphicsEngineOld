@@ -33,7 +33,7 @@ RootSignature::RootSignature() {
 	m_RootSignature = GraphicsFabric::CreateRootSignature(desc);
 }
 
-void RootSignature::Bind(ID3D12GraphicsCommandList* cmdList) noexcept(!IS_DEBUG) {
+void RootSignature::Bind(ID3D12GraphicsCommandList* cmdList, UINT frameNumber) noexcept(!IS_DEBUG) {
 	cmdList->SetGraphicsRootSignature(m_RootSignature.Get());
 }
 

@@ -15,7 +15,7 @@ public:
 	PipelineStateObject(ComPtr<ID3D12RootSignature> rootSignature, const std::vector<D3D12_INPUT_ELEMENT_DESC>& elements,
 						const std::vector<Shader>& shaders);
 
-	virtual void Bind(ID3D12GraphicsCommandList* cmdList) noexcept(!IS_DEBUG) override;
+	virtual void Bind(ID3D12GraphicsCommandList* cmdList, UINT frameNumber) noexcept(!IS_DEBUG) override;
 
 	static std::shared_ptr<PipelineStateObject> Resolve(PipelineStateObject::Option option);
 

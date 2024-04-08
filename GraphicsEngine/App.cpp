@@ -27,8 +27,11 @@ int App::Run() {
 }
 
 void App::DoFrame() {
-	UINT frameNum = m_Graphics.PrepareFrame();
-	m_Triangle->RecordDrawCommands(frameNum, m_Graphics.GetCommandList());
+	const Graphics::FramePrepData& prepData = m_Graphics.PrepareFrame();
+	static float acc = 0.0f;
+	acc += prepData.deltaTime;
+	m_Triangle->Rotate(0.0f, 0.0f, acc, prepData.frameNumber);
+	m_Triangle->RecordDrawCommands(prepData.frameNumber, m_Graphics.GetCommandList());
 	m_Graphics.ExecuteCommandLists();
 	m_Graphics.Present();
 }

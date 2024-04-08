@@ -5,8 +5,5 @@
 class IBindable {
 public:
 	virtual ~IBindable() = default;
-	virtual void Bind(ID3D12GraphicsCommandList* cmdList) noexcept(!IS_DEBUG) = 0;
-	static void SetFrameNum(UINT frameNum) { m_FrameNum = frameNum; }
-protected:
-	static inline UINT m_FrameNum = 0;
+	virtual void Bind(ID3D12GraphicsCommandList* cmdList, UINT frameNumber) noexcept(!IS_DEBUG) = 0;
 };

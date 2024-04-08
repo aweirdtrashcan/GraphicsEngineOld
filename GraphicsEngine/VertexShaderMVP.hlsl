@@ -4,17 +4,25 @@ struct VSOut
     float4 pos : SV_Position;
 };
 
-struct CBuf
+struct ModelBuffer
 {
-    matrix mvp;
+    matrix model;
 };
 
-ConstantBuffer<CBuf> cbuf : register(b0);
+struct GlobalBuffer
+{
+    matrix view;
+    matrix projection;
+};
+
+ConstantBuffer<ModelBuffer> modelBuffer : register(b0);
+ConstantBuffer<GlobalBuffer> globalBuffer : register(b1);
 
 VSOut main(float3 pos : Position, float3 color : Color)
 {
     VSOut vout;
-    vout.pos = mul(float4(pos, 1.0f), cbuf.mvp);
+    matrix mvp = mul(modelBuffer.model, mul(globalBuffer.view, globalBuffer.projection));
+    vout.pos = mul(float4(pos, 1.0f), mvp);
     vout.color = color;
 	return vout;
 }

@@ -13,6 +13,7 @@
 #include "imgui/backends/imgui_impl_win32.h"
 
 #include "GraphicsException.h"
+#include "ConstantBuffer.h"
 
 #pragma comment(lib, "d3d12.lib")
 #pragma comment(lib, "dxgi.lib")
@@ -49,18 +50,18 @@ const char* FeatureLevelToString(D3D_FEATURE_LEVEL level) {
 	return "Unknown";
 }
 
-Graphics::Graphics(UINT width, UINT height) 
+Graphics::Graphics(UINT width, UINT height)
 	:
 	m_Width(width),
 	m_Height(height) {
-	
+
 	ComPtr<ID3D12Debug> debugController;
 	if (SUCCEEDED(D3D12GetDebugInterface(IID_PPV_ARGS(&debugController)))) {
 		debugController->EnableDebugLayer();
 	}
 
 	HR_THROW_FAILED(CreateDXGIFactory2(DXGI_CREATE_FACTORY_DEBUG, IID_PPV_ARGS(&m_Factory)));
-	
+
 	ComPtr<IDXGIAdapter1> tempAdapter = nullptr;
 	ComPtr<IDXGIAdapter1> selectedAdapter = nullptr;
 
@@ -95,7 +96,7 @@ Graphics::Graphics(UINT width, UINT height)
 	D3D12_FEATURE_DATA_FEATURE_LEVELS featureLevel{};
 	featureLevel.pFeatureLevelsRequested = requestedLevels;
 	featureLevel.NumFeatureLevels = _countof(requestedLevels);
-	
+
 	HR_THROW_FAILED(tempDevice->CheckFeatureSupport(
 		D3D12_FEATURE_FEATURE_LEVELS,
 		&featureLevel,
@@ -117,7 +118,7 @@ Graphics::Graphics(UINT width, UINT height)
 	m_CopyCommandQueue = GraphicsFabric::CreateCommandQueue(D3D12_COMMAND_LIST_TYPE_COPY);
 	m_GraphicsFence = GraphicsFabric::CreateFence();
 	m_CopyFence = GraphicsFabric::CreateFence();
-	
+
 	s_SampleDesc = GraphicsFabric::QuerySampleDesc(s_BackBufferFormat);
 
 	m_RenderTargetClearValue.Color[0] = 0.3f;
@@ -138,7 +139,7 @@ Graphics::Graphics(UINT width, UINT height)
 
 	m_Scissor.right = static_cast<LONG>(width);
 	m_Scissor.bottom = static_cast<LONG>(height);
-	
+
 	DXGI_SAMPLE_DESC depthSample = GraphicsFabric::QuerySampleDesc(s_DepthStencilFormat);
 
 	m_DepthBuffer = GraphicsFabric::CreateDepthBuffer(width, height, s_DepthStencilFormat, depthSample);
@@ -152,6 +153,22 @@ Graphics::Graphics(UINT width, UINT height)
 		m_SrvDescHeap->GetCPUDescriptorHandleForHeapStart(),
 		m_SrvDescHeap->GetGPUDescriptorHandleForHeapStart()
 	);
+
+	memset(&s_ConstantBufferData, 0, sizeof(s_ConstantBufferData));
+
+	XMVECTOR eyePos = XMVectorSet(0.0f, 0.0f, -4.0f, 1.0f);
+	XMVECTOR focus = XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f);
+	XMVECTOR up = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
+	XMMATRIX view = XMMatrixLookAtLH(eyePos, focus, up);
+	const float aspectRation = static_cast<float>(width) / static_cast<float>(height);
+	XMMATRIX projection = XMMatrixPerspectiveFovLH(45.f, aspectRation, 0.1f, 1000.f);
+
+	XMStoreFloat4x4(&s_ConstantBufferData.view, XMMatrixTranspose(view));
+	XMStoreFloat4x4(&s_ConstantBufferData.projection, XMMatrixTranspose(projection));
+
+	s_ConstantBuffer = new ConstantBuffer(sizeof(s_ConstantBufferData), s_BufferCount, 1);
+	s_ConstantBuffer->Update(&s_ConstantBufferData, sizeof(s_ConstantBufferData), 0);
+	s_ConstantBuffer->Update(&s_ConstantBufferData, sizeof(s_ConstantBufferData), 1);
 }
 
 Graphics::Graphics(RECT windowRect) 
@@ -161,18 +178,19 @@ Graphics::Graphics(RECT windowRect)
 
 Graphics::~Graphics() {
 	ImGui_ImplDX12_Shutdown();
+	delete s_ConstantBuffer;
 }
 
-UINT Graphics::PrepareFrame() {
+const Graphics::FramePrepData& Graphics::PrepareFrame() {
 	HR_THROW_FAILED(m_DirectCommandAllocator->Reset());
 	HR_THROW_FAILED(m_DirectCommandList->Reset(m_DirectCommandAllocator.Get(), nullptr));
 
-	m_BackBufferIndex = m_Swapchain->GetCurrentBackBufferIndex();
+	m_PrepData.frameNumber = m_Swapchain->GetCurrentBackBufferIndex();
 
-	D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = m_RTVMSHeap->GetCPUDescriptorHandleForHeapStart().At(m_BackBufferIndex, m_RTVIncrementSize);
+	D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = m_RTVMSHeap->GetCPUDescriptorHandleForHeapStart().At(m_PrepData.frameNumber, m_RTVIncrementSize);
 	D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = m_DepthDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
 
-	Barrier(m_MSBackBuffers[m_BackBufferIndex], D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_RENDER_TARGET);
+	Barrier(m_MSBackBuffers[m_PrepData.frameNumber], D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_RENDER_TARGET);
 	Barrier(m_DepthBuffer, D3D12_RESOURCE_STATE_DEPTH_READ, D3D12_RESOURCE_STATE_DEPTH_WRITE);
 
 	GFX_THROW_FAILED(m_DirectCommandList->ClearRenderTargetView(rtvHandle, m_RenderTargetClearValue.Color, 0u, NULL));
@@ -185,39 +203,38 @@ UINT Graphics::PrepareFrame() {
 		nullptr
 	));
 
-	SetRenderTarget(m_BackBufferIndex, m_RTVMSHeap, m_DepthDescriptorHeap);
+	SetRenderTarget(m_PrepData.frameNumber, m_RTVMSHeap, m_DepthDescriptorHeap);
 
 	GFX_THROW_FAILED(m_DirectCommandList->RSSetViewports(1u, &m_Viewport));
 	GFX_THROW_FAILED(m_DirectCommandList->RSSetScissorRects(1u, &m_Scissor));
 
 	PrepareImGuiFrame();
 
-	return m_BackBufferIndex;
+	return m_PrepData;
 }
 
 void Graphics::ExecuteCommandLists() {
-
-	Barrier(m_MSBackBuffers[m_BackBufferIndex], D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_RESOLVE_SOURCE);
-	Barrier(m_BackBuffers[m_BackBufferIndex], D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_RESOLVE_DEST);
+	Barrier(m_MSBackBuffers[m_PrepData.frameNumber], D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_RESOLVE_SOURCE);
+	Barrier(m_BackBuffers[m_PrepData.frameNumber], D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_RESOLVE_DEST);
 
 	GFX_THROW_FAILED(m_DirectCommandList->ResolveSubresource(
-		m_BackBuffers[m_BackBufferIndex].Get(),
+		m_BackBuffers[m_PrepData.frameNumber].Get(),
 		0,
-		m_MSBackBuffers[m_BackBufferIndex].Get(),
+		m_MSBackBuffers[m_PrepData.frameNumber].Get(),
 		0,
 		s_BackBufferFormat
 	));
 
-	Barrier(m_MSBackBuffers[m_BackBufferIndex], D3D12_RESOURCE_STATE_RESOLVE_SOURCE, D3D12_RESOURCE_STATE_COMMON);
-	Barrier(m_BackBuffers[m_BackBufferIndex], D3D12_RESOURCE_STATE_RESOLVE_DEST, D3D12_RESOURCE_STATE_RENDER_TARGET);
+	Barrier(m_MSBackBuffers[m_PrepData.frameNumber], D3D12_RESOURCE_STATE_RESOLVE_SOURCE, D3D12_RESOURCE_STATE_COMMON);
+	Barrier(m_BackBuffers[m_PrepData.frameNumber], D3D12_RESOURCE_STATE_RESOLVE_DEST, D3D12_RESOURCE_STATE_RENDER_TARGET);
 	Barrier(m_DepthBuffer, D3D12_RESOURCE_STATE_DEPTH_WRITE, D3D12_RESOURCE_STATE_DEPTH_READ);
 
-	SetRenderTarget(m_BackBufferIndex, m_RTVHeap, m_DepthDescriptorHeap);
+	SetRenderTarget(m_PrepData.frameNumber, m_RTVHeap, m_DepthDescriptorHeap);
 
 	// Render ImGui UI before the barrier RTVState -> Present State
 	RenderImGuiFrame();
 
-	Barrier(m_BackBuffers[m_BackBufferIndex], D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
+	Barrier(m_BackBuffers[m_PrepData.frameNumber], D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
 
 	HR_THROW_FAILED(m_DirectCommandList->Close());
 
@@ -363,11 +380,11 @@ void Graphics::RenderImGuiFrame() {
 	if (ImGui::Begin("Status")) {
 		ImGuiIO& io = ImGui::GetIO();
 
-		float frameRate = io.Framerate;
-		float frameTime = frameRate / 1000.f;
+		UINT frameRate = (UINT)io.Framerate;
+		m_PrepData.deltaTime = io.DeltaTime;
 
-		ImGui::Text("FPS: %f", frameRate);
-		ImGui::Text("FrameTime: %f", frameTime);
+		ImGui::Text("FPS: %d", frameRate);
+		ImGui::Text("DeltaTime: %f", io.DeltaTime);
 		ImGui::Text("MSAA %dX", s_SampleDesc.Count);
 	}
 

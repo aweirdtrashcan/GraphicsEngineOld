@@ -58,6 +58,12 @@
     <Filter Include="Source Files\ImGui">
       <UniqueIdentifier>{a7f28d0f-a7b2-4d26-a1ba-0d1b54c62a0a}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\Assimp">
+      <UniqueIdentifier>{d3cadf78-f0f4-4cb2-806f-7699f806b313}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Assimp">
+      <UniqueIdentifier>{d04797fd-9fe3-4161-aec0-01f92febb743}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Window.h">
@@ -299,6 +305,9 @@
       <Filter>Shaders</Filter>
     </FxCompile>
     <FxCompile Include="PixelShader.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="VertexShaderMVP.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
   </ItemGroup>
