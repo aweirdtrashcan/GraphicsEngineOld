@@ -1,6 +1,7 @@
 #include "App.h"
 
 #include "Triangle.h"
+#include "Suzanne.h"
 
 App::App() 
 	:
@@ -8,18 +9,10 @@ App::App()
 	m_Graphics(m_Window.GetWindowWidth(), m_Window.GetWindowHeight()),
 	m_Camera((float)m_Window.GetWindowWidth(), (float)m_Window.GetWindowHeight())
 {
-	m_Triangle = new Triangle*[4];
-	m_Triangle[0] = new Triangle();
-	m_Triangle[1] = new Triangle();
-	m_Triangle[2] = new Triangle();
-	m_Triangle[3] = new Triangle();
+	m_Drawables.push_back(Suzanne("Models/suzanne.obj"));
 }
 
 App::~App() {
-	for (int i = 0; i < 4; i++) {
-		delete m_Triangle[i];
-	}
-	delete[] m_Triangle;
 }
 
 int App::Run() {
@@ -42,15 +35,21 @@ void App::DoFrame() {
 
 	m_Camera.Update(prepData.frameNumber);
 
-	float xx[4] = { 3.0f, 1.0f, -1.0f, -3.0f };
+	//float xx[4] = { 3.0f, 1.0f, -1.0f, -3.0f };
 
-	for (size_t i = 0; i < 4; i++) {
-		auto& t = m_Triangle[i];
-		t->Rotate(0.0f, 0.0f, acc);
-		t->Move(xx[i], 0.0f, 0.0f);
+	//for (size_t i = 0; i < 4; i++) {
+	//	auto& t = m_Triangle[i];
+	//	t->Rotate(0.0f, 0.0f, acc);
+	//	t->Move(xx[i], 0.0f, 0.0f);
 
-		t->Update(m_Camera, prepData.frameNumber);
-		t->RecordDrawCommands(prepData.frameNumber, m_Graphics.GetCommandList(), m_Camera);
+	//	t->Update(m_Camera, prepData.frameNumber);
+	//	t->RecordDrawCommands(prepData.frameNumber, m_Graphics.GetCommandList(), m_Camera);
+	//}
+
+
+	for (size_t i = 0; i < m_Drawables.size(); i++) {
+		m_Drawables[i].Update(m_Camera, prepData.frameNumber);
+		m_Drawables[i].RecordDrawCommands(prepData.frameNumber, m_Graphics.GetCommandList(), m_Camera);
 	}
 
 	m_Graphics.ExecuteCommandLists();

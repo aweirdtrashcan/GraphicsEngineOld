@@ -30,7 +30,6 @@ Triangle::Triangle() {
 
 	auto cb = std::make_shared<ConstantBuffer>(sizeof(CBuf), Graphics::s_BufferCount);
 	cb->Update(&m_CBuf, sizeof(m_CBuf), 0);
-	m_ConstantBuffer = cb;
 	AddBind(std::move(cb));
 
 	AddBind(PrimitiveTopology::Resolve(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST));

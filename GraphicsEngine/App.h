@@ -4,6 +4,7 @@
 #include "Graphics.h"
 #include "Camera.h"
 #include <vector>
+#include "IDrawable.h"
 
 #ifdef PIX_DEBUG
 #include "PixGpuCapturer.h"
@@ -23,8 +24,8 @@ private:
 #ifdef PIX_DEBUG
 	PixGpuCapturer capturer;
 #endif
+	std::vector<IDrawable> m_Drawables;
 	Graphics m_Graphics;
-	class Triangle** m_Triangle;
 	Camera m_Camera;
 };
 

@@ -313,6 +313,7 @@
     <ClInclude Include="SinglyLinkedList.h" />
     <ClInclude Include="SinglyLinkedListImpl.h" />
     <ClInclude Include="StimplyException.h" />
+    <ClInclude Include="Suzanne.h" />
     <ClInclude Include="Texture.h" />
     <ClInclude Include="Triangle.h" />
     <ClInclude Include="Utils.h" />
@@ -351,6 +352,7 @@
     <ClCompile Include="PrimitiveTopology.cpp" />
     <ClCompile Include="RootSignature.cpp" />
     <ClCompile Include="StimplyException.cpp" />
+    <ClCompile Include="Suzanne.cpp" />
     <ClCompile Include="Texture.cpp" />
     <ClCompile Include="Triangle.cpp" />
     <ClCompile Include="UUID.cpp" />
@@ -386,7 +388,6 @@
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.1</ShaderModel>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='DebugPix|x64'">5.1</ShaderModel>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">5.1</ShaderModel>
-      <AssemblerOutput Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">AssemblyCodeAndHex</AssemblerOutput>
     </FxCompile>
     <FxCompile Include="PixelShaderPNCTB.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>

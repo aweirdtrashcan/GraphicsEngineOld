@@ -28,7 +28,7 @@ protected:
 
 	CBuf m_CBuf{};
 	std::shared_ptr<ConstantBuffer> m_ConstantBuffer;
-
+	bool m_HasConstantBuffer = false;
 private:
 	XMFLOAT3 m_Rotation = { 0.0f, 0.0f, 0.0f };
 	XMFLOAT3 m_Position = { 0.0f, 0.0f, 0.0f };

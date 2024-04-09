@@ -32,6 +32,7 @@ void IDrawable::Move(float x, float y, float z) noexcept(!IS_DEBUG) {
 }
 
 void IDrawable::Update(const Camera& camera, UINT frameNum) {
+	if (!m_HasConstantBuffer) return;
 	XMMATRIX model = XMLoadFloat4x4(&m_CBuf.model) *
 		XMMatrixRotationRollPitchYaw(m_Rotation.x, m_Rotation.y, m_Rotation.z) *
 		XMMatrixTranslation(m_Position.x, m_Position.y, m_Position.z);
@@ -50,6 +51,10 @@ void IDrawable::AddBind(std::shared_ptr<IBindable> bind) noexcept(!IS_DEBUG) {
 #endif
 	if (IndexBuffer* ib = dynamic_cast<IndexBuffer*>(bind.get())) {
 		m_IndicesCount = ib->GetIndicesCount();
+	}
+	if (std::shared_ptr<ConstantBuffer> cb = std::dynamic_pointer_cast<ConstantBuffer>(bind)) {
+		m_ConstantBuffer = cb;
+		m_HasConstantBuffer = true;
 	}
 	m_Bindables.push_back(std::move(bind));
 }
