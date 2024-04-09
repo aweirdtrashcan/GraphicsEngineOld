@@ -10,6 +10,8 @@
 #include <iostream>
 #endif
 
+#if 0
+
 static __forceinline FreeListAllocator& Get() {
 	static FreeListAllocator m_Instance = FreeListAllocator(1024 * 1024, FreeListAllocator::FIND_FIRST);
 	return m_Instance;
@@ -38,4 +40,5 @@ void __CRTDECL operator delete(void* ptr) {
 void __CRTDECL operator delete[](void* ptr) {
 	Get().Free(ptr);
 }
+#endif
 #endif

@@ -24,7 +24,7 @@ private:
 #ifdef PIX_DEBUG
 	PixGpuCapturer capturer;
 #endif
-	std::vector<IDrawable> m_Drawables;
+	std::vector<IDrawable*> m_Drawables;
 	Graphics m_Graphics;
 	Camera m_Camera;
 };

@@ -25,7 +25,7 @@ struct CameraCBuf
 ConstantBuffer<ModelCBuf> modelBuffer : register(b0);
 ConstantBuffer<CameraCBuf> cameraBuffer : register(b1);
 
-VSOut main(float3 Pos : Position, float3 Normal : Normal, float3 TexCoord : TexCoord, float3 Tangent : Tangent, float3 BiTan : Bitangent)
+VSOut main(float3 Pos : Position, float3 Normal : Normal, float3 Tangent : Tangent, float3 BiTan : Bitangent, float3 TexCoord : TexCoord)
 {
     VSOut vout;
     matrix modelView = mul(modelBuffer.model, cameraBuffer.view);

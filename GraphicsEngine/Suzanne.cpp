@@ -19,10 +19,9 @@ Suzanne::Suzanne(const char* modelPath) {
 	struct Vertex {
 		XMFLOAT3 pos;
 		XMFLOAT3 normal;
-		XMFLOAT3 color = { 1.0f, 1.0f, 1.0f };
-		XMFLOAT3 texCoord;
 		XMFLOAT3 tangent;
 		XMFLOAT3 bitangent;
+		XMFLOAT3 texCoord;
 	};
 	
 	aiMesh* mesh = scene->mMeshes[0];
@@ -32,16 +31,11 @@ Suzanne::Suzanne(const char* modelPath) {
 	UINT* indices = new UINT[mesh->mNumFaces * 3];
 
 	for (unsigned int i = 0; i < mesh->mNumVertices; i++) {
-		vertices[i].pos = *(XMFLOAT3*)&mesh->mVertices[i];
-		vertices[i].normal = *(XMFLOAT3*)&mesh->mNormals[i];
+		memcpy(&vertices[i], &mesh->mVertices[i], sizeof(aiVector3D) * 4);
 	}
 
 	for (unsigned int i = 0; i < mesh->mNumFaces; i++) {
-		aiFace* face = &mesh->mFaces[i];
-		assert(face->mNumIndices == 3);
-		indices[i * 3 + 0] = face->mIndices[0];
-		indices[i * 3 + 1] = face->mIndices[1];
-		indices[i * 3 + 2] = face->mIndices[2];
+		memcpy(&indices[i * 3], mesh->mFaces[i].mIndices, sizeof(indices[0]) * 3);
 	}
 
 	std::shared_ptr<VertexBuffer> vBuffer = VertexBuffer::Resolve(vertices, mesh->mNumVertices, sizeof(Vertex), "suzannevb");

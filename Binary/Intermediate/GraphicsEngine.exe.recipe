@@ -1,0 +1,27 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project>
+  <ProjectOutputs>
+    <ProjectOutput>
+      <FullPath>C:\Users\Diego\source\repos\GraphicsEngine\Binary\GraphicsEngine.exe</FullPath>
+    </ProjectOutput>
+  </ProjectOutputs>
+  <ContentFiles>
+    <ContentFile>
+      <FullPath>C:\Users\Diego\source\repos\GraphicsEngine\Binary\Shaders\PixelShader.cso</FullPath>
+    </ContentFile>
+    <ContentFile>
+      <FullPath>C:\Users\Diego\source\repos\GraphicsEngine\Binary\Shaders\PixelShaderPNCTB.cso</FullPath>
+    </ContentFile>
+    <ContentFile>
+      <FullPath>C:\Users\Diego\source\repos\GraphicsEngine\Binary\Shaders\VertexShader.cso</FullPath>
+    </ContentFile>
+    <ContentFile>
+      <FullPath>C:\Users\Diego\source\repos\GraphicsEngine\Binary\Shaders\VertexShaderMVP.cso</FullPath>
+    </ContentFile>
+    <ContentFile>
+      <FullPath>C:\Users\Diego\source\repos\GraphicsEngine\Binary\Shaders\VertexShaderPNCTB.cso</FullPath>
+    </ContentFile>
+  </ContentFiles>
+  <SatelliteDlls />
+  <NonRecipeFileRefs />
+</Project>
