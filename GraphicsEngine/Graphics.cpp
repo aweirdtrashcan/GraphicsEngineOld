@@ -153,22 +153,6 @@ Graphics::Graphics(UINT width, UINT height)
 		m_SrvDescHeap->GetCPUDescriptorHandleForHeapStart(),
 		m_SrvDescHeap->GetGPUDescriptorHandleForHeapStart()
 	);
-
-	memset(&s_ConstantBufferData, 0, sizeof(s_ConstantBufferData));
-
-	XMVECTOR eyePos = XMVectorSet(0.0f, 0.0f, -4.0f, 1.0f);
-	XMVECTOR focus = XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f);
-	XMVECTOR up = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
-	XMMATRIX view = XMMatrixLookAtLH(eyePos, focus, up);
-	const float aspectRation = static_cast<float>(width) / static_cast<float>(height);
-	XMMATRIX projection = XMMatrixPerspectiveFovLH(45.f, aspectRation, 0.1f, 1000.f);
-
-	XMStoreFloat4x4(&s_ConstantBufferData.view, XMMatrixTranspose(view));
-	XMStoreFloat4x4(&s_ConstantBufferData.projection, XMMatrixTranspose(projection));
-
-	s_ConstantBuffer = new ConstantBuffer(sizeof(s_ConstantBufferData), s_BufferCount, 1);
-	s_ConstantBuffer->Update(&s_ConstantBufferData, sizeof(s_ConstantBufferData), 0);
-	s_ConstantBuffer->Update(&s_ConstantBufferData, sizeof(s_ConstantBufferData), 1);
 }
 
 Graphics::Graphics(RECT windowRect) 
@@ -178,7 +162,6 @@ Graphics::Graphics(RECT windowRect)
 
 Graphics::~Graphics() {
 	ImGui_ImplDX12_Shutdown();
-	delete s_ConstantBuffer;
 }
 
 const Graphics::FramePrepData& Graphics::PrepareFrame() {

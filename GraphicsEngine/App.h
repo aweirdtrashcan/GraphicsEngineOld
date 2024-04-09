@@ -2,6 +2,8 @@
 
 #include "Window.h"
 #include "Graphics.h"
+#include "Camera.h"
+#include <vector>
 
 #ifdef PIX_DEBUG
 #include "PixGpuCapturer.h"
@@ -22,6 +24,7 @@ private:
 	PixGpuCapturer capturer;
 #endif
 	Graphics m_Graphics;
-	std::unique_ptr<class Triangle> m_Triangle;
+	class Triangle** m_Triangle;
+	Camera m_Camera;
 };
 

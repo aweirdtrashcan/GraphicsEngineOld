@@ -34,7 +34,6 @@ public:
 	void WaitDeviceIdle();
 	ID3D12GraphicsCommandList* GetCommandList() const { return m_DirectCommandList.Get(); }
 	static DXGI_SAMPLE_DESC GetSampleDesc() { return s_SampleDesc; }
-	static class ConstantBuffer* GetGlobalConstantBuffer() { return s_ConstantBuffer; }
 
 private:
 	// Function for GaphicsFabric
@@ -94,12 +93,5 @@ private:
 
 	// ImGuiHeap
 	ComPtr<ID3D12DescriptorHeap> m_SrvDescHeap;
-
-	static inline struct ConstantBufferGlobalData {
-		XMFLOAT4X4 view;
-		XMFLOAT4X4 projection;
-	} s_ConstantBufferData;
-
-	static inline class ConstantBuffer* s_ConstantBuffer;
 };
 

@@ -4,25 +4,27 @@ struct VSOut
     float4 pos : SV_Position;
 };
 
-struct ModelBuffer
+struct ModelCBuf
 {
     matrix model;
+    matrix mvp;
 };
 
-struct GlobalBuffer
+struct CameraCBuf
 {
+    float4 position;
     matrix view;
     matrix projection;
+    float aspectRatio;
 };
 
-ConstantBuffer<ModelBuffer> modelBuffer : register(b0);
-ConstantBuffer<GlobalBuffer> globalBuffer : register(b1);
+ConstantBuffer<ModelCBuf> modelBuffer : register(b0);
+ConstantBuffer<CameraCBuf> cameraBuffer : register(b1);
 
 VSOut main(float3 pos : Position, float3 color : Color)
 {
     VSOut vout;
-    matrix mvp = mul(modelBuffer.model, mul(globalBuffer.view, globalBuffer.projection));
-    vout.pos = mul(float4(pos, 1.0f), mvp);
+    vout.pos = mul(float4(pos, 1.0f), modelBuffer.mvp);
     vout.color = color;
 	return vout;
 }

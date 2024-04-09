@@ -30,8 +30,8 @@ Triangle::Triangle() {
 
 	auto cb = std::make_shared<ConstantBuffer>(sizeof(CBuf), Graphics::s_BufferCount);
 	cb->Update(&m_CBuf, sizeof(m_CBuf), 0);
-	m_ConstantBuffer = cb.get();
-	AddBind(cb);
+	m_ConstantBuffer = cb;
+	AddBind(std::move(cb));
 
 	AddBind(PrimitiveTopology::Resolve(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST));
 
@@ -53,11 +53,4 @@ Triangle::Triangle() {
 
 	AddBind(std::move(vBuffer));
 	AddBind(std::move(iBuffer));
-}
-
-void Triangle::Rotate(float x, float y, float z, UINT frameNum) {
-	XMMATRIX m = XMLoadFloat4x4(&m_CBuf.mvp) * XMMatrixRotationRollPitchYaw(x, y, z);
-	XMFLOAT4X4 data;
-	XMStoreFloat4x4(&data, XMMatrixTranspose(m));
-	m_ConstantBuffer->Update(&data, sizeof(data), frameNum);
 }

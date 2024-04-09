@@ -9,7 +9,8 @@ class PipelineStateObject : public IBindable {
 public:
 	enum Option {
 		EMPTY_ROOT_SIG_PS__COLOR_VS__POS_COLOR,
-		MVP_DESCRIPTOR_TABLE_PS__COLOR_VS__POS_COLOR
+		MVP_DESCRIPTOR_TABLE_PS__COLOR_VS__POS_COLOR,
+		MVP_DESCRIPTOR_TABLE_PS__POS_NORM_TAN_BITAN__VS__POS_NORM_COORD_TAN_BITAN
 	};
 public:
 	PipelineStateObject(ComPtr<ID3D12RootSignature> rootSignature, const std::vector<D3D12_INPUT_ELEMENT_DESC>& elements,
@@ -24,7 +25,8 @@ private:
 	static void Build_EMPTY_ROOT_SIG_PS__COLOR_VS__POS_COLOR(const std::vector<D3D12_INPUT_ELEMENT_DESC>& ied,
 															 const std::vector<Shader>& shaders);
 	static void Build_MVP_DESCRIPTOR_TABLE_PS__COLOR_VS__POS_COLOR(const std::vector<D3D12_INPUT_ELEMENT_DESC>& ied,
-																   const std::vector<Shader>& shaders);
+																   const std::vector<Shader>& shaders, ID3D12RootSignature* rootSignature);
+	static void Build_MVP_DESCRIPTOR_TABLE_PS__POS_NORM_TAN_BITAN__VS__POS_NORM_COORD_TAN_BITAN(ID3D12RootSignature* rootSignature);
 
 private:
 	ComPtr<ID3D12PipelineState> m_PipelineState;

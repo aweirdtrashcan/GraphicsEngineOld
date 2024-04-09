@@ -72,31 +72,6 @@ void PipelineStateObject::BuildAllPipelineStates() {
 
 	shaders[0] = Shader(L"Shaders/VertexShaderMVP.cso", Shader::Type::VertexShader);
 
-	Build_MVP_DESCRIPTOR_TABLE_PS__COLOR_VS__POS_COLOR(ied, shaders);
-}
-
-void PipelineStateObject::Build_EMPTY_ROOT_SIG_PS__COLOR_VS__POS_COLOR(const std::vector<D3D12_INPUT_ELEMENT_DESC>& ied,
-																	   const std::vector<Shader>& shaders) {
-	std::shared_ptr<PipelineStateObject>& op = m_PipelineCaches[Option::EMPTY_ROOT_SIG_PS__COLOR_VS__POS_COLOR];
-	assert(op == nullptr);
-
-	D3D12_ROOT_SIGNATURE_DESC rootDesc{};
-	rootDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT |
-		D3D12_ROOT_SIGNATURE_FLAG_DENY_HULL_SHADER_ROOT_ACCESS |
-		D3D12_ROOT_SIGNATURE_FLAG_DENY_DOMAIN_SHADER_ROOT_ACCESS |
-		D3D12_ROOT_SIGNATURE_FLAG_DENY_GEOMETRY_SHADER_ROOT_ACCESS |
-		D3D12_ROOT_SIGNATURE_FLAG_DENY_PIXEL_SHADER_ROOT_ACCESS;
-
-	ComPtr<ID3D12RootSignature> rootSignature = GraphicsFabric::CreateRootSignature(rootDesc);
-
-	op = std::make_shared<PipelineStateObject>(rootSignature, ied, shaders);
-}
-
-void PipelineStateObject::Build_MVP_DESCRIPTOR_TABLE_PS__COLOR_VS__POS_COLOR(const std::vector<D3D12_INPUT_ELEMENT_DESC>& ied, 
-																			 const std::vector<Shader>& shaders) {
-	std::shared_ptr<PipelineStateObject>& op = m_PipelineCaches[Option::MVP_DESCRIPTOR_TABLE_PS__COLOR_VS__POS_COLOR];
-	assert(op == nullptr);
-
 	D3D12_ROOT_SIGNATURE_DESC rootDesc{};
 	rootDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT |
 		D3D12_ROOT_SIGNATURE_FLAG_DENY_HULL_SHADER_ROOT_ACCESS |
@@ -127,6 +102,53 @@ void PipelineStateObject::Build_MVP_DESCRIPTOR_TABLE_PS__COLOR_VS__POS_COLOR(con
 	rootDesc.pParameters = params;
 
 	ComPtr<ID3D12RootSignature> rootSignature = GraphicsFabric::CreateRootSignature(rootDesc);
+
+	Build_MVP_DESCRIPTOR_TABLE_PS__COLOR_VS__POS_COLOR(ied, shaders, rootSignature.Get());
+	Build_MVP_DESCRIPTOR_TABLE_PS__POS_NORM_TAN_BITAN__VS__POS_NORM_COORD_TAN_BITAN(rootSignature.Get());
+}
+
+void PipelineStateObject::Build_EMPTY_ROOT_SIG_PS__COLOR_VS__POS_COLOR(const std::vector<D3D12_INPUT_ELEMENT_DESC>& ied,
+																	   const std::vector<Shader>& shaders) {
+	std::shared_ptr<PipelineStateObject>& op = m_PipelineCaches[Option::EMPTY_ROOT_SIG_PS__COLOR_VS__POS_COLOR];
+	assert(op == nullptr);
+
+	D3D12_ROOT_SIGNATURE_DESC rootDesc{};
+	rootDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT |
+		D3D12_ROOT_SIGNATURE_FLAG_DENY_HULL_SHADER_ROOT_ACCESS |
+		D3D12_ROOT_SIGNATURE_FLAG_DENY_DOMAIN_SHADER_ROOT_ACCESS |
+		D3D12_ROOT_SIGNATURE_FLAG_DENY_GEOMETRY_SHADER_ROOT_ACCESS |
+		D3D12_ROOT_SIGNATURE_FLAG_DENY_PIXEL_SHADER_ROOT_ACCESS;
+
+	ComPtr<ID3D12RootSignature> rootSignature = GraphicsFabric::CreateRootSignature(rootDesc);
+
+	op = std::make_shared<PipelineStateObject>(rootSignature, ied, shaders);
+}
+
+void PipelineStateObject::Build_MVP_DESCRIPTOR_TABLE_PS__COLOR_VS__POS_COLOR(const std::vector<D3D12_INPUT_ELEMENT_DESC>& ied, 
+																			 const std::vector<Shader>& shaders,
+																			 ID3D12RootSignature* rootSignature) {
+	std::shared_ptr<PipelineStateObject>& op = m_PipelineCaches[Option::MVP_DESCRIPTOR_TABLE_PS__COLOR_VS__POS_COLOR];
+	assert(op == nullptr);
+
+	op = std::make_shared<PipelineStateObject>(rootSignature, ied, shaders);
+}
+
+void PipelineStateObject::Build_MVP_DESCRIPTOR_TABLE_PS__POS_NORM_TAN_BITAN__VS__POS_NORM_COORD_TAN_BITAN(ID3D12RootSignature* rootSignature) {
+	std::shared_ptr<PipelineStateObject>& op = m_PipelineCaches[Option::MVP_DESCRIPTOR_TABLE_PS__POS_NORM_TAN_BITAN__VS__POS_NORM_COORD_TAN_BITAN];
+	assert(op == nullptr);
+
+	std::vector<D3D12_INPUT_ELEMENT_DESC> ied = {
+		{ "Position", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+		{ "Normal", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+		{ "TexCoord", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+		{ "Tangent", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+		{ "Bitangent", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+	};
+
+	std::vector<Shader> shaders = {
+		Shader(L"Shaders/VertexShaderPNCTB.cso", Shader::Type::VertexShader),
+		Shader(L"Shaders/PixelShaderPNCTB.cso", Shader::Type::PixelShader)
+	};
 
 	op = std::make_shared<PipelineStateObject>(rootSignature, ied, shaders);
 }
